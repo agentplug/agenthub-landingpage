@@ -128,8 +128,8 @@ code = coding_agent.generate_code("neural network class")`
                   </div>
                   <div className="space-y-2 text-white flex-1">
                     <div><span className="text-blue-400">import</span> agenthub <span className="text-blue-400">as</span> ah</div>
-                    <div>coding_agent = <span className="text-yellow-400">ah</span>.<span className="text-blue-400">load_agent</span>(<span className="text-green-400">"agentplug/coding-agent"</span>)</div>
-                    <div>code = coding_agent.<span className="text-blue-400">generate_code</span>(<span className="text-green-400">"neural network class"</span>)</div>
+                    <div>coding_agent = <span className="text-yellow-400">ah</span>.<span className="text-blue-400">load_agent</span>(<span className="text-green-400">&quot;agentplug/coding-agent&quot;</span>)</div>
+                    <div>code = coding_agent.<span className="text-blue-400">generate_code</span>(<span className="text-green-400">&quot;neural network class&quot;</span>)</div>
                   </div>
                   <div className="mt-4 text-green-400 font-semibold">
                     ⚡ Result: 30 seconds to working agent

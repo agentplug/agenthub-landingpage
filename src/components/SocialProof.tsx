@@ -101,7 +101,7 @@ const SocialProof = () => {
               </div>
               
               <blockquote className="text-gray-700 mb-4 italic">
-                "{testimonial.text}"
+                &quot;{testimonial.text}&quot;
               </blockquote>
               
               <div>

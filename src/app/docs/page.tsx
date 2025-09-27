@@ -113,10 +113,10 @@ const Docs = () => {
                 <div><span className="text-blue-400">import</span> agenthub <span className="text-blue-400">as</span> ah</div>
                 <div></div>
                 <div><span className="text-gray-400"># Load a coding agent</span></div>
-                <div>agent = <span className="text-yellow-400">ah</span>.<span className="text-blue-400">load_agent</span>(<span className="text-green-400">"coding-agent"</span>)</div>
+                <div>agent = <span className="text-yellow-400">ah</span>.<span className="text-blue-400">load_agent</span>(<span className="text-green-400">&quot;coding-agent&quot;</span>)</div>
                 <div></div>
                 <div><span className="text-gray-400"># Generate code</span></div>
-                <div>code = agent.<span className="text-blue-400">generate_code</span>(<span className="text-green-400">"React component for data table"</span>)</div>
+                <div>code = agent.<span className="text-blue-400">generate_code</span>(<span className="text-green-400">&quot;React component for data table&quot;</span>)</div>
                 <div><span className="text-blue-400">print</span>(code)</div>
               </div>
             </div>

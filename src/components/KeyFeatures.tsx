@@ -116,15 +116,15 @@ const KeyFeatures = () => {
             <div className="space-y-2 text-white">
               <div><span className="text-blue-400">from</span> agentplug.core.tools <span className="text-blue-400">import</span> tool, run_resources</div>
               <div></div>
-              <div><span className="text-blue-400">@tool</span>(name=<span className="text-green-400">"web_search"</span>, description=<span className="text-green-400">"Search the web for information"</span>)</div>
+              <div><span className="text-blue-400">@tool</span>(name=<span className="text-green-400">&quot;web_search&quot;</span>, description=<span className="text-green-400">&quot;Search the web for information&quot;</span>)</div>
               <div><span className="text-blue-400">def</span> web_search(query: <span className="text-yellow-400">str</span>, max_results: <span className="text-yellow-400">int</span> = <span className="text-orange-400">10</span>) -&gt; <span className="text-yellow-400">list</span>:</div>
-              <div className="ml-4 text-gray-300">    <span className="text-gray-500">"""Search the web and return results."""</span></div>
+              <div className="ml-4 text-gray-300">    <span className="text-gray-500">&quot;&quot;&quot;Search the web and return results.&quot;&quot;&quot;</span></div>
               <div className="ml-4 text-gray-300">    <span className="text-gray-500"># Your search implementation here</span></div>
-              <div className="ml-4 text-gray-300">    <span className="text-blue-400">return</span> [<span className="text-green-400">f"Result {'{'}i+1{'}'} for '{'{'}query{'}'}'"</span> <span className="text-blue-400">for</span> i <span className="text-blue-400">in</span> <span className="text-yellow-400">range</span>(<span className="text-yellow-400">min</span>(max_results, <span className="text-orange-400">3</span>))]</div>
+              <div className="ml-4 text-gray-300">    <span className="text-blue-400">return</span> [<span className="text-green-400">f&quot;Result {'{'}i+1{'}'} for &apos;{'{'}query{'}'}&apos;&quot;</span> <span className="text-blue-400">for</span> i <span className="text-blue-400">in</span> <span className="text-yellow-400">range</span>(<span className="text-yellow-400">min</span>(max_results, <span className="text-orange-400">3</span>))]</div>
               <div></div>
               <div><span className="text-blue-400"># Use tools with agents</span></div>
               <div><span className="text-blue-400">import</span> agenthub <span className="text-blue-400">as</span> ah</div>
-              <div>agent = <span className="text-yellow-400">ah</span>.<span className="text-blue-400">load_agent</span>(<span className="text-green-400">"agentplug/analysis-agent"</span>, tools=[<span className="text-green-400">"web_search"</span>, <span className="text-green-400">"data_analyzer"</span>])</div>
+              <div>agent = <span className="text-yellow-400">ah</span>.<span className="text-blue-400">load_agent</span>(<span className="text-green-400">&quot;agentplug/analysis-agent&quot;</span>, tools=[<span className="text-green-400">&quot;web_search&quot;</span>, <span className="text-green-400">&quot;data_analyzer&quot;</span>])</div>
             </div>
           </div>
         </motion.div>

@@ -38,7 +38,7 @@ const Hero = () => {
               </h1>
             </div>
             <p className="text-xl lg:text-3xl text-white/80 max-w-4xl mx-auto">
-              The <span className="font-semibold gradient-text">"App Store for AI Agents"</span>
+              The <span className="font-semibold gradient-text">&quot;App Store for AI Agents&quot;</span>
             </p>
           </motion.div>
 
