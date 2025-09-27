@@ -8,58 +8,40 @@ import Link from 'next/link'
 const AgentMarketplace = () => {
   const agents = [
     {
-      id: 'agentplug/coding-agent',
-      name: 'Coding Agent',
-      description: 'Generate and review code',
-      icon: '🤖',
+      id: 'research-agent',
+      name: 'Research Agent',
+      description: 'Advanced research and analysis capabilities',
+      icon: '🔬',
       rating: 5,
       uses: '1.2k',
+      category: 'Research'
+    },
+    {
+      id: 'coding-agent',
+      name: 'Coding Agent',
+      description: 'Generate and review code across multiple languages',
+      icon: '💻',
+      rating: 5,
+      uses: '2.1k',
       category: 'Development'
     },
     {
-      id: 'agentplug/analysis-agent',
-      name: 'Data Analysis Agent',
-      description: 'Analyze data and insights',
+      id: 'analysis-agent',
+      name: 'Analysis Agent',
+      description: 'Data analysis and insights generation',
       icon: '📊',
       rating: 4,
       uses: '856',
       category: 'Data Science'
     },
     {
-      id: 'agentplug/scientific-paper-analyzer',
-      name: 'Paper Analyzer',
-      description: 'Analyze research papers',
+      id: 'scientific-paper-analyzer',
+      name: 'Scientific Paper Analyzer',
+      description: 'Analyze and summarize research papers',
       icon: '📄',
       rating: 5,
       uses: '743',
       category: 'Research'
-    },
-    {
-      id: 'agentplug/web-search',
-      name: 'Web Search Agent',
-      description: 'Search and scrape web content',
-      icon: '🔍',
-      rating: 4,
-      uses: '634',
-      category: 'Web'
-    },
-    {
-      id: 'agentplug/email-assistant',
-      name: 'Email Assistant',
-      description: 'Smart email management',
-      icon: '📧',
-      rating: 5,
-      uses: '1.5k',
-      category: 'Productivity'
-    },
-    {
-      id: 'agentplug/design-helper',
-      name: 'Design Helper',
-      description: 'Generate designs and mockups',
-      icon: '🎨',
-      rating: 4,
-      uses: '421',
-      category: 'Design'
     }
   ]
 
@@ -96,7 +78,7 @@ const AgentMarketplace = () => {
           </motion.p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+        <div className="grid md:grid-cols-2 gap-8 mb-12">
           {agents.map((agent, index) => (
             <motion.div
               key={agent.id}
@@ -139,7 +121,7 @@ const AgentMarketplace = () => {
                 </button>
                 <Link
                   href={`/agents/${agent.id}`}
-                  className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors duration-200 text-center block"
+                  className="w-full bg-white/10 hover:bg-white/20 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 text-center block border border-white/20"
                 >
                   View Details
                 </Link>

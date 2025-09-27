@@ -134,6 +134,9 @@ body {
   animation: pulseGlow 2s ease-in-out infinite;
 }
 
+/* Prevent FOUC (Flash of Unstyled Content) */
+/* Content is now visible by default since we removed initial hidden states */
+
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }

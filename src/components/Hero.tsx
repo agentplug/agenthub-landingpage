@@ -23,7 +23,7 @@ const Hero = () => {
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32 z-10">
         <div className="text-center">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 1, y: 0 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             className="mb-6"
@@ -43,7 +43,7 @@ const Hero = () => {
           </motion.div>
 
           <motion.p
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 1, y: 0 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-lg lg:text-2xl text-white/70 mb-12 max-w-5xl mx-auto"
@@ -53,18 +53,20 @@ const Hero = () => {
           </motion.p>
 
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 1, y: 0 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
             className="flex flex-col sm:flex-row gap-4 justify-center items-center"
           >
-            <Link
-              href="/docs"
+            <a
+              href="https://github.com/agentplug/agenthub"
+              target="_blank"
+              rel="noopener noreferrer"
               className="btn-primary flex items-center space-x-2"
             >
               <Rocket className="w-5 h-5" />
               <span>Try AgentHub Free</span>
-            </Link>
+            </a>
             <Link
               href="/docs"
               className="btn-secondary flex items-center space-x-2"
