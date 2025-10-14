@@ -34,15 +34,15 @@ const Docs = () => {
   ]
 
   return (
-    <div className="min-h-screen py-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen py-20 bg-[var(--background)]">
+      <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
         {/* Header */}
         <div className="text-center mb-16">
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="text-5xl lg:text-6xl font-bold text-white mb-6"
+            className="text-5xl lg:text-6xl font-semibold text-[var(--text-primary)] mb-6 tracking-tight"
           >
             Documentation
           </motion.h1>
@@ -50,7 +50,7 @@ const Docs = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-xl text-white/70 max-w-3xl mx-auto"
+            className="text-xl text-[var(--text-secondary)] max-w-3xl mx-auto"
           >
             Everything you need to integrate AI agents into your workflow
           </motion.p>
@@ -63,34 +63,34 @@ const Docs = () => {
           transition={{ duration: 0.6, delay: 0.4 }}
           className="mb-16"
         >
-          <div className="glass-dark rounded-2xl p-8 max-w-2xl mx-auto">
-            <h2 className="text-2xl font-bold text-white mb-4">Quick Install</h2>
-            <div className="bg-black/50 rounded-xl p-4 font-mono text-sm">
-              <div className="text-green-400">pip install agenthub-sdk</div>
+          <div className="card max-w-2xl mx-auto">
+            <h2 className="text-2xl font-semibold text-[var(--text-primary)] mb-4">Quick Install</h2>
+            <div className="code-block">
+              <div className="text-[var(--accent-teal)]">$ pip install agenthub-sdk</div>
             </div>
           </div>
         </motion.div>
 
         {/* Documentation Sections */}
-        <div className="grid md:grid-cols-2 gap-8 mb-16">
+        <div className="grid md:grid-cols-2 gap-6 mb-16">
           {sections.map((section, index) => (
             <motion.div
               key={section.title}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 * index }}
-              className="glass-dark rounded-2xl p-8 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
+              className="card group hover:-translate-y-1 transition-transform duration-200"
             >
               <div className="flex items-center mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-600 via-blue-600 to-emerald-600 rounded-xl flex items-center justify-center mr-4 text-white">
+                <div className="w-12 h-12 bg-gradient-to-br from-[var(--accent-teal)] to-[var(--accent-blue)] rounded-lg flex items-center justify-center mr-4 text-white shadow-lg">
                   {section.icon}
                 </div>
-                <h3 className="text-xl font-bold text-white">{section.title}</h3>
+                <h3 className="text-xl font-semibold text-[var(--text-primary)]">{section.title}</h3>
               </div>
-              <p className="text-white/70 mb-6">{section.description}</p>
+              <p className="text-[var(--text-secondary)] mb-6 leading-relaxed">{section.description}</p>
               <Link
                 href={section.href}
-                className="inline-flex items-center text-purple-400 hover:text-purple-300 transition-colors"
+                className="inline-flex items-center text-[var(--accent-teal)] hover:text-[var(--accent-teal-hover)] transition-colors font-medium"
               >
                 Learn more <ArrowRight className="w-4 h-4 ml-2" />
               </Link>
@@ -105,19 +105,19 @@ const Docs = () => {
           transition={{ duration: 0.6, delay: 0.8 }}
           className="mb-16"
         >
-          <div className="glass-dark rounded-2xl p-8">
-            <h2 className="text-2xl font-bold text-white mb-6">Basic Usage</h2>
-            <div className="bg-black/50 rounded-xl p-6 font-mono text-sm overflow-x-auto">
-              <div className="text-gray-400 mb-4"># Load and use an agent</div>
-              <div className="space-y-2 text-white">
-                <div><span className="text-blue-400">import</span> agenthub <span className="text-blue-400">as</span> ah</div>
+          <div className="card">
+            <h2 className="text-2xl font-semibold text-[var(--text-primary)] mb-6">Basic Usage</h2>
+            <div className="code-block overflow-x-auto">
+              <div className="text-[var(--text-tertiary)] mb-4"># Load and use an agent</div>
+              <div className="space-y-2 text-[var(--text-primary)]">
+                <div><span className="text-[var(--accent-purple)]">import</span> agenthub <span className="text-[var(--accent-purple)]">as</span> ah</div>
                 <div></div>
-                <div><span className="text-gray-400"># Load a coding agent</span></div>
-                <div>agent = <span className="text-yellow-400">ah</span>.<span className="text-blue-400">load_agent</span>(<span className="text-green-400">&quot;coding-agent&quot;</span>)</div>
+                <div><span className="text-[var(--text-tertiary)]"># Load a coding agent</span></div>
+                <div>agent = <span className="text-[var(--text-primary)]">ah</span>.<span className="text-[var(--accent-teal)]">load_agent</span>(<span className="text-orange-400">&quot;coding-agent&quot;</span>)</div>
                 <div></div>
-                <div><span className="text-gray-400"># Generate code</span></div>
-                <div>code = agent.<span className="text-blue-400">generate_code</span>(<span className="text-green-400">&quot;React component for data table&quot;</span>)</div>
-                <div><span className="text-blue-400">print</span>(code)</div>
+                <div><span className="text-[var(--text-tertiary)]"># Generate code</span></div>
+                <div>code = agent.<span className="text-[var(--accent-teal)]">generate_code</span>(<span className="text-orange-400">&quot;React component for data table&quot;</span>)</div>
+                <div><span className="text-[var(--accent-blue)]">print</span>(code)</div>
               </div>
             </div>
           </div>
@@ -132,7 +132,7 @@ const Docs = () => {
         >
           <Link
             href="/"
-            className="inline-flex items-center text-white/70 hover:text-white transition-colors"
+            className="inline-flex items-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors font-medium"
           >
             ← Back to Home
           </Link>

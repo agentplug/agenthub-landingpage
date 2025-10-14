@@ -2,82 +2,104 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { Rocket, BookOpen, Play } from 'lucide-react'
+import { ArrowRight, BookOpen } from 'lucide-react'
 import Link from 'next/link'
 
 const Hero = () => {
   return (
-    <section className="relative overflow-hidden min-h-screen flex items-center">
-      {/* Animated background */}
-      <div className="absolute inset-0">
-        {/* Grid pattern */}
-        <div className="absolute inset-0 opacity-50" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Ccircle cx='30' cy='30' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-        }}></div>
-        
-        {/* Floating orbs */}
-        <div className="absolute top-20 left-10 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl animate-float"></div>
-        <div className="absolute top-40 right-20 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-float" style={{animationDelay: '2s'}}></div>
-        <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl animate-float" style={{animationDelay: '4s'}}></div>
-      </div>
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32 z-10">
-        <div className="text-center">
+    <section className="relative overflow-hidden min-h-screen flex items-center bg-[var(--background)]">
+      {/* Subtle gradient overlay - OpenAI style */}
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[var(--surface)]/30"></div>
+      
+      {/* Subtle radial gradient */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--accent-teal)_0%,_transparent_50%)] opacity-[0.03]"></div>
+      
+      <div className="relative max-w-5xl mx-auto px-6 sm:px-8 lg:px-12 py-24 lg:py-32 z-10">
+        <div className="text-center space-y-8">
+          {/* Badge */}
           <motion.div
-            initial={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="mb-6"
+            transition={{ duration: 0.5 }}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--surface)] border border-[var(--border)] text-sm text-[var(--text-secondary)]"
           >
-            <div className="flex items-center justify-center mb-6 overflow-visible">
-              <div className="w-20 h-20 bg-gradient-to-br from-purple-600/20 via-blue-600/20 to-emerald-600/20 backdrop-blur-sm border border-white/10 rounded-2xl flex items-center justify-center mr-8 animate-pulse-glow">
-                <span className="text-white text-4xl">🤖</span>
-              </div>
-              <h1 className="text-6xl lg:text-8xl font-bold gradient-text glow-text
-                            leading-[1.15] lg:leading-[1.2] pt-1 overflow-visible">
-                AgentHub
-              </h1>
-            </div>
-            <p className="text-xl lg:text-3xl text-white/80 max-w-4xl mx-auto">
-              The <span className="font-semibold gradient-text">&quot;App Store for AI Agents&quot;</span>
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--accent-teal)] opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--accent-teal)]"></span>
+            </span>
+            Introducing AgentHub
+          </motion.div>
+
+          {/* Main heading */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="space-y-4"
+          >
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-semibold text-[var(--text-primary)] tracking-tight">
+              The App Store for{' '}
+              <span className="gradient-text">AI Agents</span>
+            </h1>
+            <p className="text-xl lg:text-2xl text-[var(--text-secondary)] max-w-3xl mx-auto leading-relaxed">
+              Transform weeks of AI agent integration into one line of code. 
+              Discover, install, and deploy AI agents instantly.
             </p>
           </motion.div>
 
-          <motion.p
-            initial={{ opacity: 1, y: 0 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-lg lg:text-2xl text-white/70 mb-12 max-w-5xl mx-auto"
-          >
-            Transform <span className="font-semibold text-red-400">weeks of AI agent integration</span> into{' '}
-            <span className="font-bold text-emerald-400">one line of code</span>
-          </motion.p>
-
+          {/* CTA Buttons */}
           <motion.div
-            initial={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4"
           >
             <a
               href="https://github.com/agentplug/agenthub"
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-primary flex items-center space-x-2"
+              className="btn-primary flex items-center gap-2 min-w-[200px] justify-center"
             >
-              <Rocket className="w-5 h-5" />
-              <span>Try AgentHub Free</span>
+              <span>Get started</span>
+              <ArrowRight className="w-4 h-4" />
             </a>
             <Link
               href="/docs"
-              className="btn-secondary flex items-center space-x-2"
+              className="btn-secondary flex items-center gap-2 min-w-[200px] justify-center"
             >
-              <BookOpen className="w-5 h-5" />
-              <span>View Documentation</span>
+              <BookOpen className="w-4 h-4" />
+              <span>Documentation</span>
             </Link>
-            <button className="flex items-center space-x-2 text-purple-600 hover:text-purple-700 transition-colors duration-200">
-              <Play className="w-5 h-5" />
-              <span>Watch Demo</span>
-            </button>
+          </motion.div>
+
+          {/* Code example */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="pt-12 max-w-2xl mx-auto"
+          >
+            <div className="code-block text-left">
+              <div className="flex items-center gap-2 mb-3 pb-3 border-b border-[var(--border)]">
+                <div className="flex gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-red-500/20"></div>
+                  <div className="w-3 h-3 rounded-full bg-yellow-500/20"></div>
+                  <div className="w-3 h-3 rounded-full bg-green-500/20"></div>
+                </div>
+                <span className="text-xs text-[var(--text-tertiary)]">terminal</span>
+              </div>
+              <div className="space-y-2 font-mono text-sm">
+                <div className="text-[var(--text-tertiary)]"># Install AgentHub</div>
+                <div className="text-[var(--accent-teal)]">$ pip install agenthub-sdk</div>
+                <div className="mt-4 text-[var(--text-tertiary)]"># Load and use an agent</div>
+                <div className="text-[var(--text-primary)]">
+                  <span className="text-[var(--accent-purple)]">import</span> agenthub <span className="text-[var(--accent-purple)]">as</span> ah
+                </div>
+                <div className="text-[var(--text-primary)]">
+                  agent = ah.load_agent(<span className="text-orange-400">&quot;coding-agent&quot;</span>)
+                </div>
+              </div>
+            </div>
           </motion.div>
         </div>
       </div>

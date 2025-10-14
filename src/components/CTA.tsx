@@ -2,54 +2,74 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { Rocket, BookOpen } from 'lucide-react'
+import { ArrowRight, BookOpen } from 'lucide-react'
 import Link from 'next/link'
 
 const CTA = () => {
   return (
-    <section className="py-20 bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+    <section className="py-24 bg-gradient-to-b from-[var(--background)] to-[var(--surface)]">
+      <div className="max-w-4xl mx-auto px-6 sm:px-8 lg:px-12 text-center">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.5 }}
           viewport={{ once: true }}
+          className="space-y-8"
         >
-          <h2 className="text-4xl lg:text-5xl font-bold text-white mb-6">
-            Ready to Get Started?
-          </h2>
-          
-          <p className="text-xl text-purple-100 mb-8 max-w-3xl mx-auto">
-            Transform your AI workflow in 30 seconds
-          </p>
+          <div className="space-y-4">
+            <h2 className="text-4xl lg:text-5xl font-semibold text-[var(--text-primary)] tracking-tight">
+              Ready to get started?
+            </h2>
+            <p className="text-xl text-[var(--text-secondary)] max-w-2xl mx-auto">
+              Transform your AI workflow in seconds. Free and open source.
+            </p>
+          </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <a
+              href="https://github.com/agentplug/agenthub"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-primary flex items-center gap-2 min-w-[200px] justify-center"
+            >
+              <span>Get started</span>
+              <ArrowRight className="w-4 h-4" />
+            </a>
             <Link
               href="/docs"
-              className="bg-white text-purple-600 hover:bg-gray-50 font-semibold py-4 px-8 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center space-x-2"
+              className="btn-secondary flex items-center gap-2 min-w-[200px] justify-center"
             >
-              <Rocket className="w-5 h-5" />
-              <span>Install AgentHub</span>
-            </Link>
-            
-            <Link
-              href="/docs"
-              className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-purple-600 font-semibold py-4 px-8 rounded-lg transition-all duration-200 flex items-center space-x-2"
-            >
-              <BookOpen className="w-5 h-5" />
-              <span>Read Documentation</span>
+              <BookOpen className="w-4 h-4" />
+              <span>Documentation</span>
             </Link>
           </div>
 
-          <div className="bg-black/20 backdrop-blur-sm rounded-xl p-6 max-w-2xl mx-auto">
-            <div className="text-purple-100 text-sm mb-2">Quick Install:</div>
-            <div className="bg-gray-900 rounded-lg p-4 font-mono text-white text-left">
-              <div className="text-green-400">pip install agenthub-sdk</div>
+          <div className="pt-8">
+            <div className="inline-block card max-w-xl w-full">
+              <div className="text-[var(--text-tertiary)] text-sm mb-3 text-left">
+                Quick install:
+              </div>
+              <div className="code-block text-left">
+                <div className="text-[var(--accent-teal)]">
+                  $ pip install agenthub-sdk
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="mt-8 text-purple-100 text-sm">
-            <span className="font-semibold">Free</span> • <span className="font-semibold">Open Source</span> • <span className="font-semibold">MIT License</span>
+          <div className="pt-4 flex items-center justify-center gap-6 text-sm text-[var(--text-tertiary)]">
+            <span className="flex items-center gap-2">
+              <span className="w-2 h-2 bg-[var(--accent-teal)] rounded-full"></span>
+              Free
+            </span>
+            <span className="flex items-center gap-2">
+              <span className="w-2 h-2 bg-[var(--accent-teal)] rounded-full"></span>
+              Open Source
+            </span>
+            <span className="flex items-center gap-2">
+              <span className="w-2 h-2 bg-[var(--accent-teal)] rounded-full"></span>
+              MIT License
+            </span>
           </div>
         </motion.div>
       </div>

@@ -10,7 +10,7 @@ const AgentMarketplace = () => {
     {
       id: 'research-agent',
       name: 'Research Agent',
-      description: 'Advanced research and analysis capabilities',
+      description: 'Advanced research and analysis with comprehensive information gathering',
       icon: '🔬',
       rating: 5,
       uses: '1.2k',
@@ -19,7 +19,7 @@ const AgentMarketplace = () => {
     {
       id: 'coding-agent',
       name: 'Coding Agent',
-      description: 'Generate and review code across multiple languages',
+      description: 'Generate and review code across multiple programming languages',
       icon: '💻',
       rating: 5,
       uses: '2.1k',
@@ -28,7 +28,7 @@ const AgentMarketplace = () => {
     {
       id: 'analysis-agent',
       name: 'Analysis Agent',
-      description: 'Data analysis and insights generation',
+      description: 'Data analysis and insights generation with visualization',
       icon: '📊',
       rating: 4,
       uses: '856',
@@ -37,7 +37,7 @@ const AgentMarketplace = () => {
     {
       id: 'scientific-paper-analyzer',
       name: 'Scientific Paper Analyzer',
-      description: 'Analyze and summarize research papers',
+      description: 'Analyze and summarize research papers with citation tracking',
       icon: '📄',
       rating: 5,
       uses: '743',
@@ -49,109 +49,101 @@ const AgentMarketplace = () => {
     return Array.from({ length: 5 }, (_, i) => (
       <Star
         key={i}
-        className={`w-4 h-4 ${i < rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+        className={`w-4 h-4 ${
+          i < rating ? 'text-[var(--accent-teal)] fill-[var(--accent-teal)]' : 'text-[var(--text-tertiary)]'
+        }`}
       />
     ))
   }
 
   return (
-    <section className="py-20 bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="py-24 bg-[var(--background)]">
+      <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
         <div className="text-center mb-16">
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.5 }}
             viewport={{ once: true }}
-            className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4"
+            className="text-4xl lg:text-5xl font-semibold text-[var(--text-primary)] mb-4 tracking-tight"
           >
             Popular Agents
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
             viewport={{ once: true }}
-            className="text-xl text-gray-600 max-w-3xl mx-auto"
+            className="text-xl text-[var(--text-secondary)] max-w-3xl mx-auto"
           >
             Discover powerful AI agents ready to integrate into your workflow
           </motion.p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8 mb-12">
+        <div className="grid md:grid-cols-2 gap-6 mb-12">
           {agents.map((agent, index) => (
             <motion.div
               key={agent.id}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 * index }}
+              transition={{ duration: 0.5, delay: 0.05 * index }}
               viewport={{ once: true }}
-              className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+              className="card group cursor-pointer"
             >
               <div className="flex items-start justify-between mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-blue-600 rounded-xl flex items-center justify-center text-2xl">
-                  {agent.icon}
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-[var(--surface-hover)] rounded-lg flex items-center justify-center text-2xl group-hover:scale-110 transition-transform duration-200">
+                    {agent.icon}
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent-teal)] transition-colors">
+                      {agent.name}
+                    </h3>
+                    <span className="text-xs text-[var(--text-tertiary)] px-2 py-0.5 bg-[var(--surface-hover)] rounded-full">
+                      {agent.category}
+                    </span>
+                  </div>
                 </div>
-                <span className="text-xs font-medium text-purple-600 bg-purple-100 px-2 py-1 rounded-full">
-                  {agent.category}
-                </span>
               </div>
 
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
-                {agent.name}
-              </h3>
-              
-              <p className="text-gray-600 mb-4">
+              <p className="text-[var(--text-secondary)] text-sm mb-4 leading-relaxed">
                 {agent.description}
               </p>
 
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-1">
+              <div className="flex items-center justify-between mb-4 pb-4 border-b border-[var(--border)]">
+                <div className="flex items-center gap-1">
                   {renderStars(agent.rating)}
                 </div>
-                <div className="flex items-center text-gray-500 text-sm">
-                  <Users className="w-4 h-4 mr-1" />
+                <div className="flex items-center gap-1 text-[var(--text-tertiary)] text-sm">
+                  <Users className="w-4 h-4" />
                   {agent.uses} uses
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <button className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200">
+              <div className="flex gap-2">
+                <button className="btn-primary flex-1 text-sm">
                   Try Now
                 </button>
                 <Link
                   href={`/agents/${agent.id}`}
-                  className="w-full bg-white/10 hover:bg-white/20 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 text-center block border border-white/20"
+                  className="btn-secondary flex-1 text-sm text-center"
                 >
-                  View Details
+                  Details
                 </Link>
               </div>
             </motion.div>
           ))}
         </div>
 
-        {/* CTA Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.6 }}
-          viewport={{ once: true }}
-          className="text-center bg-white rounded-2xl p-8 shadow-lg"
-        >
-          <h3 className="text-2xl font-bold text-gray-900 mb-4">
-            Ready to explore more agents?
-          </h3>
-          <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
-            Browse our full marketplace with hundreds of AI agents across different categories and use cases.
-          </p>
+        <div className="text-center">
           <Link
             href="/marketplace"
-            className="inline-flex items-center space-x-2 btn-primary"
+            className="inline-flex items-center gap-2 btn-secondary"
           >
-            <span>Browse All Agents</span>
-            <ArrowRight className="w-5 h-5" />
+            <span>Browse all agents</span>
+            <ArrowRight className="w-4 h-4" />
           </Link>
-        </motion.div>
+        </div>
       </div>
     </section>
   )

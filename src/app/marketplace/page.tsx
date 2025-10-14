@@ -53,21 +53,21 @@ const Marketplace = () => {
     return Array.from({ length: 5 }, (_, i) => (
       <Star
         key={i}
-        className={`w-4 h-4 ${i < rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+        className={`w-4 h-4 ${i < rating ? 'text-[var(--accent-teal)] fill-current' : 'text-[var(--text-tertiary)]'}`}
       />
     ))
   }
 
   return (
-    <div className="min-h-screen py-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen py-20 bg-[var(--background)]">
+      <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
         {/* Header */}
         <div className="text-center mb-16">
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="text-5xl lg:text-6xl font-bold text-white mb-6"
+            className="text-5xl lg:text-6xl font-semibold text-[var(--text-primary)] mb-6 tracking-tight"
           >
             Agent Marketplace
           </motion.h1>
@@ -75,7 +75,7 @@ const Marketplace = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-xl text-white/70 max-w-3xl mx-auto"
+            className="text-xl text-[var(--text-secondary)] max-w-3xl mx-auto"
           >
             Discover and integrate powerful AI agents into your workflow
           </motion.p>
@@ -90,15 +90,15 @@ const Marketplace = () => {
         >
           <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
             <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--text-tertiary)] w-5 h-5" />
               <input
                 type="text"
                 placeholder="Search agents..."
-                className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-purple-500"
+                className="w-full pl-10 pr-4 py-3 bg-[var(--surface)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] placeholder-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent-teal)] transition-colors"
               />
             </div>
             <div className="flex items-center gap-4">
-              <button className="flex items-center gap-2 px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white hover:bg-white/20 transition-colors">
+              <button className="flex items-center gap-2 px-4 py-3 bg-[var(--surface)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors">
                 <Filter className="w-5 h-5" />
                 Filter
               </button>
@@ -107,48 +107,48 @@ const Marketplace = () => {
         </motion.div>
 
         {/* Agents Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-6">
           {agents.map((agent, index) => (
             <motion.div
               key={agent.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 * index }}
-              className="glass-dark rounded-2xl p-8 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
+              className="card card-glow group"
             >
               <div className="flex items-start justify-between mb-6">
-                <div className="w-16 h-16 bg-gradient-to-br from-purple-600 via-blue-600 to-emerald-600 rounded-2xl flex items-center justify-center text-3xl">
+                <div className="w-14 h-14 bg-gradient-to-br from-[var(--accent-teal)] to-[var(--accent-blue)] rounded-lg flex items-center justify-center text-3xl shadow-lg">
                   {agent.icon}
                 </div>
-                <span className="text-xs font-medium text-purple-400 bg-purple-400/20 px-3 py-1 rounded-full">
+                <span className="text-xs font-medium text-[var(--accent-teal)] bg-[var(--accent-teal-light)] px-3 py-1 rounded-full">
                   {agent.category}
                 </span>
               </div>
 
-              <h3 className="text-2xl font-bold text-white mb-3">
+              <h3 className="text-2xl font-semibold text-[var(--text-primary)] mb-3">
                 {agent.name}
               </h3>
               
-              <p className="text-white/70 mb-6">
+              <p className="text-[var(--text-secondary)] mb-6 leading-relaxed">
                 {agent.description}
               </p>
 
               <div className="mb-6">
-                <h4 className="text-sm font-semibold text-white/80 mb-2">Features:</h4>
+                <h4 className="text-sm font-semibold text-[var(--text-primary)] mb-2">Features:</h4>
                 <div className="flex flex-wrap gap-2">
                   {agent.features.map((feature, idx) => (
-                    <span key={idx} className="text-xs bg-white/10 text-white/70 px-2 py-1 rounded">
+                    <span key={idx} className="text-xs bg-[var(--surface-hover)] text-[var(--text-secondary)] px-2 py-1 rounded border border-[var(--border)]">
                       {feature}
                     </span>
                   ))}
                 </div>
               </div>
 
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center justify-between mb-6 pb-6 border-b border-[var(--border)]">
                 <div className="flex items-center space-x-1">
                   {renderStars(agent.rating)}
                 </div>
-                <div className="flex items-center text-white/60 text-sm">
+                <div className="flex items-center text-[var(--text-tertiary)] text-sm">
                   <Users className="w-4 h-4 mr-1" />
                   {agent.uses} uses
                 </div>
@@ -157,11 +157,11 @@ const Marketplace = () => {
               <div className="space-y-3">
                 <Link
                   href={`/agents/${agent.id}`}
-                  className="w-full bg-gradient-to-r from-purple-600 via-blue-600 to-emerald-600 hover:from-purple-700 hover:via-blue-700 hover:to-emerald-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 text-center block"
+                  className="btn-primary w-full text-center block"
                 >
                   View Details
                 </Link>
-                <button className="w-full bg-white/10 hover:bg-white/20 text-white font-medium py-3 px-6 rounded-xl transition-colors duration-200 border border-white/20">
+                <button className="btn-secondary w-full">
                   Try Now
                 </button>
               </div>
@@ -178,7 +178,7 @@ const Marketplace = () => {
         >
           <Link
             href="/"
-            className="inline-flex items-center text-white/70 hover:text-white transition-colors"
+            className="inline-flex items-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors font-medium"
           >
             ← Back to Home
           </Link>
