@@ -1,55 +1,84 @@
+
 'use client'
 
-import React from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Star, Users, Search, Filter } from 'lucide-react'
+import { Star, Users, Search, Filter, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 
-const Marketplace = () => {
-  const agents = [
-    {
-      id: 'research-agent',
-      name: 'Research Agent',
-      description: 'Advanced research and analysis capabilities',
-      icon: '🔬',
-      rating: 5,
-      uses: '1.2k',
-      category: 'Research',
-      features: ['Web search', 'Data analysis', 'Report generation']
-    },
-    {
-      id: 'coding-agent',
-      name: 'Coding Agent',
-      description: 'Generate and review code across multiple languages',
-      icon: '💻',
-      rating: 5,
-      uses: '2.1k',
-      category: 'Development',
-      features: ['Code generation', 'Code review', 'Bug fixing']
-    },
-    {
-      id: 'analysis-agent',
-      name: 'Analysis Agent',
-      description: 'Data analysis and insights generation',
-      icon: '📊',
-      rating: 4,
-      uses: '856',
-      category: 'Data Science',
-      features: ['Data visualization', 'Statistical analysis', 'Insights']
-    },
-    {
-      id: 'scientific-paper-analyzer',
-      name: 'Scientific Paper Analyzer',
-      description: 'Analyze and summarize research papers',
-      icon: '📄',
-      rating: 5,
-      uses: '743',
-      category: 'Research',
-      features: ['Paper analysis', 'Summary generation', 'Citation tracking']
-    }
-  ]
+interface AgentListItem {
+  id: string
+  slug: string
+  name: string
+  description: string
+  category?: string | null
+  tags: string[]
+  repoUrl: string
+  isVerified: boolean
+  evaluationSummaryUrl?: string | null
+  usageCount: number
+  aggregateScore: number | null
+  featured: boolean
+  createdAt: string
+  publishedAt?: string | null
+}
 
-  const renderStars = (rating: number) => {
+interface AgentsResponse {
+  agents: AgentListItem[]
+  total: number
+  page: number
+  limit: number
+}
+
+const starRatingFromScore = (score: number | null) => {
+  if (score === null || Number.isNaN(score)) {
+    return 3
+  }
+  return Math.max(1, Math.min(5, Math.round(score / 20)))
+}
+
+const Marketplace = () => {
+  const [agents, setAgents] = useState<AgentListItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
+
+  useEffect(() => {
+    const loadAgents = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        const response = await fetch('/api/agents?limit=50')
+        if (!response.ok) {
+          throw new Error('Failed to load agents')
+        }
+        const data: AgentsResponse = await response.json()
+        setAgents(data.agents)
+      } catch (err) {
+        console.error(err)
+        setError('Unable to load agents right now. Please try again later.')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    void loadAgents()
+  }, [])
+
+  const filteredAgents = useMemo(() => {
+    if (!searchTerm) {
+      return agents
+    }
+    const term = searchTerm.toLowerCase()
+    return agents.filter((agent) =>
+      agent.name.toLowerCase().includes(term) ||
+      agent.description.toLowerCase().includes(term) ||
+      agent.tags.some((tag) => tag.toLowerCase().includes(term))
+    )
+  }, [agents, searchTerm])
+
+  const renderStars = (score: number | null) => {
+    const rating = starRatingFromScore(score)
     return Array.from({ length: 5 }, (_, i) => (
       <Star
         key={i}
@@ -94,6 +123,8 @@ const Marketplace = () => {
               <input
                 type="text"
                 placeholder="Search agents..."
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
                 className="w-full pl-10 pr-4 py-3 bg-[var(--surface)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] placeholder-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent-teal)] transition-colors"
               />
             </div>
@@ -107,8 +138,24 @@ const Marketplace = () => {
         </motion.div>
 
         {/* Agents Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-6">
-          {agents.map((agent, index) => (
+        {loading ? (
+          <div className="flex justify-center py-20">
+            <Loader2 className="w-8 h-8 animate-spin text-[var(--accent-teal)]" />
+          </div>
+        ) : error ? (
+          <div className="text-center py-20">
+            <p className="text-[var(--text-secondary)]">{error}</p>
+          </div>
+        ) : filteredAgents.length === 0 ? (
+          <div className="text-center py-20">
+            <p className="text-[var(--text-secondary)]">No agents match your search yet.</p>
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-6">
+            {filteredAgents.map((agent, index) => {
+              const cardBadge = agent.tags[0]?.charAt(0)?.toUpperCase() ?? agent.name.charAt(0)?.toUpperCase() ?? 'A'
+
+              return (
             <motion.div
               key={agent.id}
               initial={{ opacity: 0, y: 20 }}
@@ -118,10 +165,10 @@ const Marketplace = () => {
             >
               <div className="flex items-start justify-between mb-6">
                 <div className="w-14 h-14 bg-gradient-to-br from-[var(--accent-teal)] to-[var(--accent-blue)] rounded-lg flex items-center justify-center text-3xl shadow-lg">
-                  {agent.icon}
+                  {cardBadge}
                 </div>
                 <span className="text-xs font-medium text-[var(--accent-teal)] bg-[var(--accent-teal-light)] px-3 py-1 rounded-full">
-                  {agent.category}
+                  {agent.category ?? 'General'}
                 </span>
               </div>
 
@@ -136,9 +183,9 @@ const Marketplace = () => {
               <div className="mb-6">
                 <h4 className="text-sm font-semibold text-[var(--text-primary)] mb-2">Features:</h4>
                 <div className="flex flex-wrap gap-2">
-                  {agent.features.map((feature, idx) => (
-                    <span key={idx} className="text-xs bg-[var(--surface-hover)] text-[var(--text-secondary)] px-2 py-1 rounded border border-[var(--border)]">
-                      {feature}
+                  {agent.tags.map((tag) => (
+                    <span key={tag} className="text-xs bg-[var(--surface-hover)] text-[var(--text-secondary)] px-2 py-1 rounded border border-[var(--border)]">
+                      {tag}
                     </span>
                   ))}
                 </div>
@@ -146,17 +193,17 @@ const Marketplace = () => {
 
               <div className="flex items-center justify-between mb-6 pb-6 border-b border-[var(--border)]">
                 <div className="flex items-center space-x-1">
-                  {renderStars(agent.rating)}
+                  {renderStars(agent.aggregateScore)}
                 </div>
                 <div className="flex items-center text-[var(--text-tertiary)] text-sm">
                   <Users className="w-4 h-4 mr-1" />
-                  {agent.uses} uses
+                  {agent.usageCount.toLocaleString()} uses
                 </div>
               </div>
 
               <div className="space-y-3">
                 <Link
-                  href={`/agents/${agent.id}`}
+                  href={`/agents/${agent.slug}`}
                   className="btn-primary w-full text-center block"
                 >
                   View Details
@@ -166,8 +213,10 @@ const Marketplace = () => {
                 </button>
               </div>
             </motion.div>
-          ))}
-        </div>
+              )
+            })}
+          </div>
+        )}
 
         {/* Back to Home */}
         <motion.div

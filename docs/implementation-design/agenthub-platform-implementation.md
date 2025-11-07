@@ -445,6 +445,203 @@ model AgentUsage {
 }
 ```
 
+### 4.2 Schema Design Rationale
+
+This section explains why the database schema is designed this way and the reasoning behind key decisions.
+
+#### Overall Design Philosophy
+
+**Relational Structure with Clear Relationships:**
+- We use a relational database (PostgreSQL) because AgentHub has clear relationships: Users create Agents, Agents can have Flags, and Agents have Usage records
+- This structure allows efficient queries (e.g., "get all agents by a user" or "get all flags for an agent")
+- Relationships are enforced at the database level (foreign keys), ensuring data integrity
+
+**Separation of Concerns:**
+- **User Model**: Handles authentication and attribution (lightweight, MVP-focused)
+- **Agent Model**: Core marketplace entity with all agent metadata and status
+- **AgentFlag Model**: Community moderation (separate to avoid cluttering Agent model)
+- **AgentUsage Model**: Analytics and reputation tracking (separate to handle high-volume writes)
+
+#### User Model Design
+
+**Why Lightweight?**
+- MVP focuses on attribution, not full user profiles
+- We only store GitHub identity (githubId, githubUsername, githubAvatar)
+- No email, bio, or other profile data needed for MVP
+- Can extend later if needed
+
+**Field Choices:**
+- `githubId` (unique): Primary identifier from GitHub OAuth (never changes)
+- `githubUsername`: Display name (can change, but we update it)
+- `githubAvatar`: Profile picture URL (optional, nice to have)
+- `displayName`: Optional override for display (allows users to customize how their name appears)
+
+**Relations:**
+- `agents Agent[]`: One-to-many relationship (one user can create many agents)
+- This allows easy queries like "show all agents by this creator"
+
+#### Agent Model Design
+
+**Why So Many Fields?**
+The Agent model is the core entity and needs to store:
+1. **Basic Information**: name, description, version (required for discovery)
+2. **Repository Information**: repoUrl, repoOwner, repoName, repoBranch (links to GitHub)
+3. **Compliance Information**: agentPyPath, agentYamlPath, hasValidInterface (validation status)
+4. **Trust Signals**: isVerified, verificationStatus, disclosureChecklist, evaluationSummaryUrl (for ranking)
+5. **Reputation Data**: usageCount, aggregateScore, featured (for discovery and ranking)
+6. **Status Management**: status, isFlagged, flagCount (for moderation and filtering)
+
+**Key Design Decisions:**
+
+**Repository Fields (repoUrl, repoOwner, repoName, repoBranch):**
+- **Why separate fields?** Makes querying easier (e.g., "find all agents from this GitHub user")
+- **Why store repoUrl AND separate fields?** repoUrl for display, separate fields for queries and validation
+- **repoBranch**: Allows agents to specify which branch to use (defaults to "main" but can be changed)
+
+**AgentHub Compliance Fields:**
+- `agentPyPath`, `agentYamlPath`: Optional paths allow agents to store files in subdirectories
+- `hasValidInterface`: Cached validation result (avoids re-validating on every query)
+- **Why cache?** Validation is expensive (GitHub API calls), so we store the result
+
+**Trust Signals:**
+- `isVerified`: Boolean for quick filtering (all published agents are verified, but useful for queries)
+- `verificationStatus`: String allows for future states (e.g., "verified", "pending", "rejected")
+- `disclosureChecklist`: JSON field stores flexible checklist data (can evolve without schema changes)
+- `evaluationSummaryUrl`: Optional link to external evaluation (creator-provided, builds trust)
+
+**Reputation Fields:**
+- `usageCount`: Denormalized counter (updated on each usage event, avoids expensive COUNT queries)
+- `aggregateScore`: Cached calculation (recalculated periodically, not on every query)
+- `featured`: Boolean flag (algorithmically determined, allows fast filtering of featured agents)
+
+**Status Management:**
+- `status`: String enum ("published", "flagged", "suspended") - allows filtering and state management
+- `isFlagged`: Denormalized boolean (quick check without joining AgentFlag table)
+- `flagCount`: Denormalized counter (updated when flags are added/removed, avoids COUNT queries)
+
+**Why Denormalization?**
+- `usageCount`, `flagCount`, `isFlagged`, `aggregateScore` are denormalized (stored redundantly)
+- **Trade-off**: Slight storage increase for significant query performance improvement
+- **Benefit**: No need to JOIN or COUNT on every marketplace query (much faster)
+
+**Indexes:**
+- `@@index([slug])`: Unique slugs are used in URLs (fast lookups by slug)
+- `@@index([status])`: Filtering by status (e.g., "show only published agents")
+- `@@index([featured, aggregateScore])`: Composite index for ranking queries (sort by featured + score)
+- `@@index([category])`: Filter by category/domain
+- `@@index([tags])`: Filter by tags/capabilities (array indexing in PostgreSQL)
+
+**Why These Indexes?**
+- Marketplace queries frequently filter by status, category, tags, and sort by score
+- Indexes make these queries fast (avoid full table scans)
+- Composite index on `[featured, aggregateScore]` optimizes the most common ranking query
+
+#### AgentFlag Model Design
+
+**Why Separate Model?**
+- Flags are separate entities (can have multiple flags per agent)
+- Allows tracking flag history (who flagged, when, why, resolution status)
+- Keeps Agent model clean (doesn't store flag details)
+
+**Field Choices:**
+- `flaggedBy` (nullable): Allows anonymous flags (some users may not be logged in)
+- `reason`: Predefined categories ("spam", "malicious", "broken", "license", "other")
+- `description`: Optional text explanation
+- `status`: Workflow state ("pending", "reviewed", "resolved", "dismissed")
+- `reviewedBy`, `reviewedAt`: Track admin review process
+
+**Relations:**
+- `onDelete: Cascade`: If agent is deleted, flags are automatically deleted (maintains data integrity)
+
+**Indexes:**
+- `@@index([agentId])`: Fast lookup of all flags for an agent
+- `@@index([status])`: Fast filtering of pending flags for admin review
+
+#### AgentUsage Model Design
+
+**Why Separate Model?**
+- Usage events are high-volume (many views, installs, etc.)
+- Separate model allows efficient storage and querying
+- Can be archived or aggregated without affecting Agent model
+
+**Field Choices:**
+- `userId` (nullable): Allows anonymous usage tracking (privacy-friendly)
+- `action`: String enum ("view", "try", "install") - tracks different interaction types
+- `createdAt`: Timestamp for time-based analytics
+
+**Why Not Store in Agent Model?**
+- Would require array/JSON field (inefficient for queries)
+- Would bloat Agent table (each usage event = row in Agent table)
+- Separate table allows efficient aggregation and time-based queries
+
+**Indexes:**
+- `@@index([agentId])`: Fast aggregation of usage by agent (for calculating usageCount)
+- `@@index([createdAt])`: Time-based analytics (e.g., "usage in last 30 days")
+
+**Denormalization Strategy:**
+- `Agent.usageCount` is updated periodically from `AgentUsage` table
+- **Why?** Avoids expensive COUNT queries on every marketplace load
+- **Trade-off**: Slight delay in usage count updates for much faster queries
+
+#### Design Patterns Used
+
+**1. Denormalization for Performance:**
+- Store calculated values (usageCount, flagCount, aggregateScore) instead of calculating on-the-fly
+- Trade storage space for query speed
+- Update these fields via background jobs or on write operations
+
+**2. Flexible JSON Fields:**
+- `disclosureChecklist`: JSON allows schema evolution without migrations
+- Can add new checklist items without changing database schema
+
+**3. Status Enums as Strings:**
+- `status`, `verificationStatus`, `reason`: Strings allow easy extension
+- Can add new statuses without schema changes
+- Downside: No database-level validation (handled in application code)
+
+**4. Optional vs Required Fields:**
+- Required: Core fields needed for agent to function (name, description, repoUrl)
+- Optional: Nice-to-have fields that enhance experience (license, readmeUrl, evaluationSummaryUrl)
+- Allows agents to be published with minimal information, enhanced over time
+
+**5. Timestamps:**
+- `createdAt`: When record was created
+- `updatedAt`: Auto-updated on changes (tracks last modification)
+- `publishedAt`: When agent was published (separate from createdAt, allows tracking publication time)
+
+#### Future Extensibility
+
+The schema is designed to be extended:
+
+**User Model:**
+- Can add email, bio, preferences later
+- Can add organization support (User belongs to Organization)
+
+**Agent Model:**
+- Can add versioning (AgentVersion model)
+- Can add categories as separate model (Category model with relationships)
+- Can add reviews/ratings (Review model)
+
+**Flag Model:**
+- Can add flag history (track status changes)
+- Can add flag types (expand beyond current reasons)
+
+**Usage Model:**
+- Can add more detailed analytics (session tracking, error tracking)
+- Can add geographic data (where usage occurs)
+
+#### Summary
+
+The schema design balances:
+- **Performance**: Denormalization, indexes, efficient queries
+- **Flexibility**: JSON fields, optional fields, extensible structure
+- **Data Integrity**: Foreign keys, cascade deletes, required fields
+- **Simplicity**: Lightweight models, clear relationships, MVP-focused
+
+**Key Insight**: Start simple, optimize for MVP queries, extend as needed. The schema supports current requirements while remaining flexible for future growth.
+
+---
+
 ## 5. Core Workflows
 
 This section explains the key workflows: how agents are published, validated, and discovered.

@@ -9,13 +9,20 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@auth/prisma-adapter": "^2.11.1",
     "@monaco-editor/react": "^4.6.0",
+    "@octokit/rest": "^22.0.1",
+    "@prisma/client": "^6.19.0",
     "clsx": "^2.0.0",
     "framer-motion": "^10.16.16",
     "lucide-react": "^0.294.0",
     "next": "^14.2.33",
+    "next-auth": "^4.24.13",
+    "prisma": "^6.19.0",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "yaml": "^2.8.1",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@types/node": "^20",
