@@ -15,14 +15,18 @@
 
 1. [Executive Summary](#1-executive-summary)
 2. [Key Concepts & Terminology](#2-key-concepts--terminology)
-3. [High-Level Architecture Overview](#3-high-level-architecture-overview)
-4. [System Architecture Design](#4-system-architecture-design)
-5. [Data Models & Database](#5-data-models--database)
-6. [Core Workflows](#6-core-workflows)
-7. [API Design](#7-api-design)
-8. [Implementation Plan](#8-implementation-plan)
-9. [Technical Details](#9-technical-details)
-10. [Key Design Decisions](#10-key-design-decisions)
+3. [System Architecture & Technology Stack](#3-system-architecture--technology-stack)
+4. [Data Models & Database](#4-data-models)
+5. [Core Workflows](#5-core-workflows)
+6. [API Design](#6-api-design)
+7. [Implementation Phases](#7-implementation-phases)
+8. [File Structure](#8-file-structure)
+9. [Security Considerations](#9-security-considerations)
+10. [Scalability Considerations](#10-scalability-considerations)
+11. [Success Metrics Tracking](#11-success-metrics-tracking)
+12. [Risks & Mitigations](#12-risks--mitigations)
+13. [Key Design Decisions](#13-key-design-decisions)
+14. [Next Steps](#14-next-steps)
 
 ---
 
@@ -94,98 +98,59 @@ AgentHub is like **GitHub, but for AI agents**. Just as GitHub hosts code reposi
 
 ---
 
-## 3. High-Level Architecture Overview
+## 3. System Architecture & Technology Stack
 
-### The Big Picture
+This section explains how the platform is structured, what technologies we use, and why we made these choices.
 
-Think of the platform as three layers:
+### 3.1 High-Level Architecture
+
+The platform is organized into three main layers that work together:
 
 ```
 ┌─────────────────────────────────────────┐
 │   User Interface (Frontend)             │
-│   What users see and interact with      │
+│   - React components and pages          │
+│   - What users see and interact with    │
 └─────────────────────────────────────────┘
               ↕ (HTTP Requests)
 ┌─────────────────────────────────────────┐
 │   API Layer (Backend Logic)             │
-│   Handles business logic and validation │
+│   - Business logic and validation       │
+│   - Handles requests and processes data │
 └─────────────────────────────────────────┘
               ↕ (Database Queries)
 ┌─────────────────────────────────────────┐
 │   Data Storage (Database)               │
-│   Stores agents, users, stats, etc.     │
+│   - Stores agents, users, stats         │
+│   - PostgreSQL database                 │
 └─────────────────────────────────────────┘
 ```
 
-### How It Works (Simple Explanation)
+### 3.2 How It Works: Request Flow
 
-1. **User visits marketplace** → Frontend requests agent list from API
-2. **API queries database** → Gets list of agents, calculates rankings
-3. **API returns data** → Frontend displays agents with rankings and badges
-4. **User clicks agent** → Frontend requests agent details
-5. **User publishes agent** → Frontend sends repository URL to API
-6. **API validates repository** → Checks files, format, permissions
-7. **If valid** → Creates agent record, publishes immediately
-8. **If invalid** → Returns error messages to user
+Here's how a typical user interaction flows through the system:
 
-### Technology Stack (Quick Overview)
+**Example: User Views Marketplace**
 
-- **Frontend & Backend**: Next.js (React framework with built-in API capabilities)
-- **Database**: PostgreSQL (stores all data)
-- **Database Tool**: Prisma (makes database operations easier)
-- **Authentication**: NextAuth.js (handles GitHub login)
-- **Hosting**: Vercel (cloud platform optimized for Next.js)
+1. **User visits `/marketplace`** → Browser loads the frontend page
+2. **Frontend requests agent list** → `fetch('/api/agents')`
+3. **API route receives request** → `app/api/agents/route.ts` runs
+4. **Service layer processes** → Queries database, calculates rankings
+5. **Database returns data** → List of agents with metadata
+6. **API returns JSON** → Frontend receives agent data
+7. **Frontend displays results** → User sees ranked list of agents
 
-**Why these choices?**
-- **Next.js**: Combines frontend and backend in one framework (simpler for MVP)
-- **PostgreSQL**: Reliable database that handles complex queries well
-- **Vercel**: Automatically handles deployment, scaling, and hosting (saves time and money)
+**Example: User Publishes Agent**
 
----
+1. **User submits repository URL** → Frontend sends to `/api/publish/submit`
+2. **API validates repository** → Checks files, format, permissions via GitHub API
+3. **If valid** → Creates agent record in database, publishes immediately
+4. **If invalid** → Returns error messages to user
+5. **Frontend shows result** → Success message or error details
 
-## 4. System Architecture Design
+### 3.3 Detailed System Architecture
 
-### 3.1 Architecture Principles
-
-**Simplicity First:**
-- Start with Next.js API routes (no separate backend service initially)
-- Use serverless-friendly database (PostgreSQL on Supabase/Neon or Vercel Postgres)
-- Leverage Next.js middleware for auth
-- Keep backend in same repo for MVP
-
-**Justification for Next.js API Routes:**
-- **Unified Stack**: Frontend and backend share TypeScript types, reducing duplication and type mismatches
-- **Fast Development**: No need to manage separate backend deployment, API gateway, CORS, or environment variables across services
-- **Cost-Effective**: Serverless functions scale automatically, pay only for usage (important for MVP budget)
-- **Deployment Simplicity**: Single deployment process via Vercel, no orchestration needed
-- **Migration Path**: Can extract to separate backend service later if needed (architecture supports this)
-- **Next.js Optimization**: Built-in optimizations for API routes (automatic request deduplication, edge caching)
-
-**Maintainability:**
-- Clear separation of concerns (API routes, services, data layer)
-- TypeScript throughout
-- Consistent error handling
-- Environment-based configuration
-
-**Justification for TypeScript & Prisma:**
-- **Type Safety**: TypeScript prevents common runtime errors and provides IDE autocomplete
-- **Prisma ORM**: Type-safe database queries, automatic migrations, built-in validation
-- **Reduced Bugs**: Compile-time checks catch errors before deployment
-- **Developer Experience**: Better IDE support, refactoring safety, self-documenting code
-
-**Scalability:**
-- Stateless API design
-- Database indexing for search/filter
-- Caching strategy for read-heavy operations
-- Architecture supports future migration to microservices if needed
-
-**Justification for Stateless Design:**
-- **Horizontal Scaling**: Any serverless instance can handle any request (no sticky sessions)
-- **Cloud-Native**: Fits serverless architectures (AWS Lambda, Vercel Functions, Azure Functions)
-- **Reliability**: Failure of one instance doesn't affect others
-- **Load Distribution**: Traffic naturally distributes across instances
-
-### 3.2 System Architecture
+Here's the complete technical architecture with all components:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -228,68 +193,147 @@ Think of the platform as three layers:
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### 3.3 Technology Stack
+### 3.4 Technology Stack
 
-**Backend:**
-- **API Framework**: Next.js API Routes (App Router)
-- **Database**: PostgreSQL (Vercel Postgres or Supabase)
-- **ORM**: Prisma (type-safe, migration-friendly)
-- **Authentication**: NextAuth.js v5 (Auth.js) with GitHub OAuth
-- **Validation**: Zod (schema validation)
-- **HTTP Client**: Built-in `fetch` or `axios` for external APIs
+#### Core Framework & Language
 
-**Justification for Technology Choices:**
+**Next.js (App Router)**
+- **What it does**: Combines frontend (React) and backend (API routes) in one framework
+- **Why we use it**: 
+  - Single codebase for faster development
+  - Built-in API routes (no separate backend needed)
+  - Automatic code splitting and optimization
+  - Server-side rendering for better performance
+- **Benefits**: TypeScript support, hot reload, easy deployment
 
-**PostgreSQL:**
-- **Relational Structure**: AgentHub has clear relationships (User → Agent, Agent → Flags, Agent → Usage)
-- **ACID Compliance**: Ensures data integrity for critical operations (publishing, ranking calculations)
-- **Rich Querying**: Complex filtering, sorting, and aggregation for marketplace search
-- **Mature Ecosystem**: Extensive tooling, ORM support, proven scalability
-- **JSON Support**: Native JSON columns for flexible metadata (disclosureChecklist, interface methods)
+**TypeScript**
+- **What it does**: Adds type checking to JavaScript
+- **Why we use it**: Prevents bugs, better IDE support, easier refactoring
 
-**Prisma:**
-- **Type Safety**: Generates TypeScript types from schema, preventing database/application type mismatches
-- **Migrations**: Version-controlled schema changes, easy rollbacks
-- **Developer Experience**: Auto-completion, query builder, relationship handling
-- **Performance**: Query optimization, connection pooling, prepared statements
+#### Database & Data Management
 
-**NextAuth.js (Auth.js):**
-- **GitHub Integration**: Native GitHub OAuth support, minimal configuration
-- **Session Management**: Built-in session handling, secure cookies, JWT support
-- **Type Safety**: TypeScript-first, integrates with Next.js types
-- **Extensibility**: Easy to add more providers later (GitLab, Bitbucket)
-- **Security**: CSRF protection, secure token handling, session rotation
+**PostgreSQL**
+- **What it does**: Relational database that stores all platform data
+- **Why we use it**:
+  - Handles relationships well (User → Agent → Flags)
+  - ACID compliance ensures data integrity
+  - Powerful querying for search and filtering
+  - Native JSON support for flexible metadata
+- **Hosting options**: Vercel Postgres or Supabase (serverless PostgreSQL)
 
-**Zod:**
-- **Runtime Validation**: Validates API inputs at runtime (prevents bad data in database)
-- **Type Inference**: Generates TypeScript types from schemas (single source of truth)
-- **Error Messages**: Human-readable validation errors for API responses
-- **Composable**: Easy to build complex validation rules from simple ones
+**Prisma ORM**
+- **What it does**: Makes database operations easier and type-safe
+- **Why we use it**:
+  - Generates TypeScript types from database schema
+  - Type-safe queries (catch errors before runtime)
+  - Easy migrations (version-controlled schema changes)
+  - Better developer experience (autocomplete, query builder)
 
-**Infrastructure:**
-- **Hosting**: Vercel (Next.js optimized)
-- **Database Hosting**: Vercel Postgres or Supabase (serverless PostgreSQL)
-- **File Storage**: GitHub (for agent repos), Vercel Blob (if needed for assets)
-- **Caching**: Vercel Edge Config or Redis (for read-heavy operations)
+#### Authentication & Security
 
-**Justification for Infrastructure Choices:**
+**NextAuth.js (Auth.js)**
+- **What it does**: Handles user authentication via GitHub OAuth
+- **Why we use it**:
+  - Native GitHub integration (minimal setup)
+  - Secure session management
+  - Built-in CSRF protection
+  - Easy to add more providers later (GitLab, Bitbucket)
 
-**Vercel:**
-- **Next.js Native**: Built by Next.js creators, optimized for Next.js features
-- **Zero Configuration**: Automatic deployments from Git, environment variables, CDN
-- **Edge Functions**: Low latency worldwide via edge network
-- **Serverless**: Automatic scaling, pay-per-use pricing
-- **Developer Experience**: Preview deployments, analytics, error tracking
+**Zod**
+- **What it does**: Validates API input data at runtime
+- **Why we use it**:
+  - Prevents bad data from reaching database
+  - Generates TypeScript types automatically
+  - Human-readable error messages
+  - Composable validation rules
 
-**Vercel Postgres or Supabase:**
-- **Serverless**: Auto-scaling, connection pooling, no server management
-- **PostgreSQL Compatible**: Standard SQL, can migrate to self-hosted if needed
-- **Backup & Restore**: Built-in backups, point-in-time recovery
-- **Supabase Bonus**: Real-time subscriptions, built-in auth (though we use NextAuth)
+#### Infrastructure & Hosting
 
-**External Services:**
-- **GitHub API**: For repository validation and metadata
-- **OAuth Provider**: GitHub OAuth (via NextAuth.js)
+**Vercel**
+- **What it does**: Hosts and deploys the Next.js application
+- **Why we use it**:
+  - Built by Next.js creators (optimized for Next.js)
+  - Zero configuration deployment
+  - Automatic scaling (serverless functions)
+  - Global CDN for fast loading
+  - Preview deployments for testing
+
+**Vercel Postgres or Supabase**
+- **What it does**: Hosts PostgreSQL database
+- **Why we use it**:
+  - Serverless (auto-scales, pay per use)
+  - No server management needed
+  - Built-in backups
+  - Connection pooling included
+
+#### External Services
+
+**GitHub API**
+- **What it does**: Validates repositories and fetches metadata
+- **Why we use it**: Agents are stored in GitHub repositories
+
+**OAuth Provider (GitHub)**
+- **What it does**: Allows users to sign in with GitHub account
+- **Why we use it**: Users need GitHub accounts to publish agents
+
+### 3.5 Architecture Principles
+
+#### Simplicity First
+
+**Start with Next.js API Routes**
+- Frontend and backend in one codebase (easier for MVP)
+- No separate backend service initially
+- Can extract to separate service later if needed
+
+**Why this approach?**
+- **Faster development**: One deployment, shared types, no CORS issues
+- **Cost-effective**: Serverless functions scale automatically, pay per use
+- **Easy migration**: Can extract API routes to separate backend later
+
+#### Maintainability
+
+**Clear Separation of Concerns**
+- API routes handle HTTP requests
+- Service layer contains business logic
+- Data layer handles database operations
+
+**TypeScript Throughout**
+- Type safety prevents errors
+- Better IDE support
+- Self-documenting code
+
+#### Scalability
+
+**Stateless API Design**
+- Any serverless instance can handle any request
+- Scales horizontally automatically
+- No sticky sessions needed
+
+**Database Indexing**
+- Fast queries for search and filtering
+- Indexes on frequently queried fields (slug, status, category)
+
+**Caching Strategy**
+- Cache read-heavy operations (agent listings)
+- Reduce database load
+- Faster response times
+
+### 3.6 Why These Technology Choices?
+
+#### For MVP (Minimum Viable Product)
+
+1. **Speed**: Next.js API routes let us build faster (one codebase)
+2. **Cost**: Serverless functions are cheap for low traffic (pay per use)
+3. **Simplicity**: Less infrastructure to manage
+4. **Type Safety**: TypeScript + Prisma catch errors early
+
+#### Future Flexibility
+
+- **Can extract backend**: API routes can become separate service
+- **Can change hosting**: Database is standard PostgreSQL (can migrate)
+- **Can add services**: Architecture supports microservices later
+
+**The key insight**: Start simple, optimize later. These choices work great for MVP and don't lock us into anything.
 
 ## 4. Data Models
 
@@ -401,269 +445,78 @@ model AgentUsage {
 }
 ```
 
-### 4.2 Admin Review Analysis
+## 5. Core Workflows
 
-**Arguments FOR Admin Review:**
-- **Quality Control**: Prevents spam, malicious code, and obviously broken agents
-- **Standards Enforcement**: Ensures AgentHub interface compliance before publication
-- **Platform Reputation**: Curated catalog maintains trust and quality perception
-- **Security**: Can catch security issues before public exposure
-- **Legal Protection**: Review can check for license violations or problematic content
+This section explains the key workflows: how agents are published, validated, and discovered.
 
-**Arguments AGAINST Admin Review (GitHub Model):**
-- **Friction**: Reduces contribution velocity and enthusiasm (maintenance burden on creators)
-- **Scalability**: Manual review doesn't scale—becomes bottleneck as platform grows
-- **Bias**: Human reviewers may have unconscious biases about what's "good"
-- **Delayed Value**: Time-to-publication is slow (days/weeks), losing momentum
-- **GitHub Proof**: GitHub works fine without pre-approval—quality surfaces naturally through usage and community signals
-- **Self-Moderation**: Community can flag/report issues; quality signals (usage, ratings) naturally surface good agents
-- **Automated Validation**: Technical checks (agent.py, agent.yaml) can be automated; don't need humans for compliance
+### 5.1 Agent Publishing Workflow
 
-**Decision: Open Publishing Model (GitHub-like)**
+**Publishing Flow (Immediate Publication):**
 
-AgentHub will use **open publishing** with **quality-based discovery**:
-- ✅ Immediate publication upon successful validation (no admin gate)
-- ✅ Automated technical validation (agent.py, agent.yaml presence and structure)
-- ✅ Quality-based ranking (trust signals, usage, evaluations determine visibility)
-- ✅ Community moderation (flag/report for abuse; post-publication review only if needed)
-- ✅ Low visibility for low-quality agents (still discoverable but not featured)
-
-**Justification for Open Publishing Model:**
-
-**1. Proven Success (GitHub Model):**
-- GitHub demonstrates that open publishing works at scale (millions of repos)
-- Quality naturally surfaces through community signals (stars, forks, issues, PRs)
-- Low friction encourages contributions and experimentation
-
-**2. Scalability:**
-- Automated validation can handle thousands of submissions (scales infinitely)
-- Manual review becomes bottleneck at scale (requires hiring reviewers, becomes expensive)
-- Quality-based ranking scales automatically (algorithm handles any number of agents)
-
-**3. Community-Driven Quality:**
-- Usage signals reflect real-world value (more useful = more usage = higher ranking)
-- Evaluations provide third-party validation (creator-provided or community-generated)
-- Flags enable reactive moderation (only review when issues reported)
-
-**4. Low Friction for Creators:**
-- Immediate feedback (validation passes → published immediately)
-- No waiting period (GitHub-style: push code → visible immediately)
-- Encourages experimentation and iteration (easy to update/publish new versions)
-
-**5. Technical Validation is Sufficient:**
-- Automated checks ensure AgentHub interface compliance (the only hard requirement)
-- Code quality, usefulness, and security are subjective (better handled by community)
-- Bad agents naturally sink (low ranking, low visibility, can be flagged if malicious)
-
-### 4.3 Data Flow (Modified - Open Publishing)
-
-**Agent Submission Flow (Immediate Publication):**
-1. User submits repository URL via `/api/publish`
-2. **Automated Validation** (blocks publication if failed):
-   - Repository exists and is accessible (GitHub API check)
+1. **User submits repository URL** → Frontend sends to `/api/publish/submit`
+2. **Automated Validation** (all must pass):
+   - Repository exists and is accessible via GitHub API
    - Repository is public (or user has access)
-   - `agent.py` file exists in repository root or specified path
-   - `agent.yaml` file exists in repository root or specified path
-   - `agent.yaml` is valid YAML format
-   - `agent.yaml` contains required fields: `name`, `version`, `description`
-   - `agent.py` is syntactically valid Python (basic syntax check)
-3. **Metadata Extraction** (from agent.yaml):
-   - Extract: name, version, description, inputs/outputs, dependencies, license
-   - Store: repoOwner, repoName, repoBranch
-   - Set: agentPyPath, agentYamlPath
-4. **If validation passes**: **Immediate publication**
-   - Creates `Agent` record with status="published", `publishedAt` = now
-   - Sets `hasValidInterface = true`
-   - Calculates initial `aggregateScore` (based on available signals)
-5. **If validation fails**: Returns errors, agent not created
-6. Agent appears in marketplace immediately (may be low-ranked if lacking signals)
+   - User has permission (owner/collaborator)
+   - `agent.py` file exists (required file)
+   - `agent.yaml` file exists (required file)
+   - `agent.yaml` is valid YAML with required fields: `name`, `version`, `description`
+   - `agent.py` is valid Python syntax
+   - `agent.py` follows AgentHub CLI interface pattern
+3. **Metadata Extraction** (if validation passes):
+   - Extract metadata from `agent.yaml` (name, version, description, tags, license, etc.)
+   - Store repository information (owner, name, branch, file paths)
+4. **Immediate Publication** (if all validations pass):
+   - Create `Agent` record in database with `status="published"`
+   - Set `isVerified=true`, `verificationStatus="verified"`, `hasValidInterface=true`
+   - Set `publishedAt` timestamp
+   - Calculate initial `aggregateScore` (based on available signals)
+   - Agent appears in marketplace immediately (may start with lower ranking)
+5. **Error Response** (if validation fails):
+   - Return detailed error messages
+   - No agent record created
+   - User can fix issues and resubmit
 
-**Validation Rules (Based on AgentHub Interface Standard - Example: `research-agent`)**
+### 5.2 Agent Validation
 
-**Critical Validations (Required for Publication - Blocks if Failed):**
-
-| Check | Validation Details | Failure Action |
-|-------|-------------------|---------------|
-| Repository exists | Accessible via GitHub API | Reject: "Repository not found or inaccessible" |
-| Repository is public | Public repo or user has access | Reject: "Repository must be public" |
-| User permission | User is owner/collaborator | Reject: "You don't have permission to publish this repository" |
-| `agent.py` exists | File exists in repo root (or specified path) | Reject: "agent.py not found in repository" |
-| `agent.yaml` exists | File exists in repo root (or specified path) | Reject: "agent.yaml not found in repository" |
-| `agent.yaml` is valid YAML | Can be parsed as YAML | Reject: "agent.yaml is not valid YAML" |
-| `agent.yaml` has `name` | Field exists and is non-empty string | Reject: "Missing required field: name" |
-| `agent.yaml` has `version` | Field exists and is non-empty string | Reject: "Missing required field: version" |
-| `agent.yaml` has `description` | Field exists and is non-empty string | Reject: "Missing required field: description" |
-| `agent.py` is valid Python | AST parsing succeeds | Reject: "agent.py has syntax errors" |
-| `agent.py` interface pattern | Uses `sys.argv[1]` for JSON input | Reject: "agent.py doesn't follow AgentHub interface pattern" |
-| `agent.py` interface pattern | Uses `json.dumps()` for JSON output | Reject: "agent.py doesn't follow AgentHub interface pattern" |
-
-**Interface Pattern Requirements:**
-- `agent.py` must accept JSON via `sys.argv[1]` with structure: `{"method": "...", "parameters": {...}}`
-- `agent.py` must output JSON via `print(json.dumps(...))` with structure: `{"result": ...}` or `{"error": ...}`
-- Example pattern: See `research-agent` at `agentplug/research-agent`
-
-**Optional Validations (Warnings Only - Doesn't Block Publication):**
-
-| Check | Validation Details | Warning Message |
-|-------|-------------------|----------------|
-| `version` format | Follows semantic versioning (e.g., "1.0.0") | Warning: "Version should follow semantic versioning" |
-| `interface.methods` exists | Methods defined in agent.yaml | Info: "interface.methods detected" |
-| `interface.methods` consistency | Methods in agent.py match agent.yaml | Warning: "Methods in agent.py don't match agent.yaml" |
-| `agent.yaml` has `tags` | Array of strings | No warning |
-| `agent.yaml` has `license` | String value | No warning |
-| `agent.yaml` has `author` | String value | No warning |
-| `agent.yaml` has `python_version` | String value (e.g., "3.11+") | No warning |
-| Shebang in `agent.py` | `#!/usr/bin/env python3` | Info: "Shebang recommended but not required" |
-| README.md exists | File exists | Info: "README.md recommended but not required" |
-
-**Validation Process (Detailed):**
-```
-Step 1: Repository Validation
-  → GitHub API: Get repository info
-  → Check: Repository exists, is accessible
-  → Check: Repository is public OR user has access
-  → Check: User is owner/collaborator
-  → If fails: Return error, stop
-
-Step 2: File Discovery
-  → GitHub API: List repository files (recursive)
-  → Search: Find agent.py (check root first, then search)
-  → Search: Find agent.yaml (check root first, then search)
-  → Store: agentPyPath, agentYamlPath
-  → If not found: Return error, stop
-
-Step 3: agent.yaml Validation
-  → GitHub API: Fetch agent.yaml content
-  → Parse: YAML parser (safe_load)
-  → Validate: Structure is dictionary/object
-  → Check required fields:
-    - name (string, non-empty)
-    - version (string, non-empty)
-    - description (string, non-empty)
-  → Validate optional fields (if present):
-    - tags (array of strings)
-    - interface.methods (object structure - see below)
-  → Extract: Metadata for database
-  → If fails: Return error with field name, stop
-
-Step 4: agent.yaml Interface Methods (if present)
-  → Check: interface.methods exists and is object
-  → For each method in interface.methods:
-    - Check: Method has 'description' field (string)
-    - Check: 'parameters' field is object (if present)
-    - Check: 'returns' field is object (if present)
-  → Store: Method list for consistency check
-  → If fails: Warning only, continue
-
-Step 5: agent.py Syntax Validation
-  → GitHub API: Fetch agent.py content
-  → Parse: Python AST parser (ast.parse)
-  → Check: No syntax errors
-  → If fails: Return syntax error details, stop
-
-Step 6: agent.py Interface Pattern Validation
-  → Check: File imports 'json' and 'sys' modules
-  → Check: File uses 'sys.argv' (for command-line input)
-  → Check: File uses 'json.loads()' or similar (for parsing input)
-  → Check: File uses 'json.dumps()' or similar (for JSON output)
-  → Check: File has 'main()' function or equivalent entry point
-  → Check: File handles 'if __name__ == "__main__"' pattern
-  → If fails: Return pattern error, stop
-
-Step 7: Method Consistency Check (if interface.methods exists)
-  → Parse: Extract method calls from agent.py (AST analysis)
-  → Compare: Methods in agent.py vs methods in agent.yaml
-  → Check: All methods in agent.yaml exist in agent.py
-  → If fails: Warning only, continue (doesn't block)
-
-Step 8: Final Validation
-  → If all critical checks pass: 
-    - Set hasValidInterface = true
-    - Set isVerified = true
-    - Set verificationStatus = "verified"
-    - Extract all metadata
-    - Create Agent record with status="published"
-    - Publish immediately
-  → If any critical check failed:
-    - Return detailed error list
-    - Do not create agent record
-```
-
-**What Validation DOES:**
-- ✅ Ensures AgentHub interface standard is met (agent.py + agent.yaml exist)
-- ✅ Ensures basic file structure is correct (valid YAML, valid Python syntax)
-- ✅ Ensures minimum metadata is present (name, version, description)
-- ✅ Ensures repository is accessible (public or user has access)
-- ✅ Ensures agent.py follows AgentHub CLI interface pattern:
-  - Reads JSON from `sys.argv[1]` with `{"method": "...", "parameters": {...}}`
-  - Outputs JSON via `print(json.dumps(...))` with `{"result": ...}` or `{"error": ...}`
-- ✅ Ensures interface.methods (if present) are properly structured
-- ✅ Optionally validates method consistency between agent.yaml and agent.py
-
-**What Validation DOES NOT do:**
-- ❌ Does NOT check if agent actually works/runs correctly
-- ❌ Does NOT check code quality or best practices
-- ❌ Does NOT check if agent is useful or valuable
-- ❌ Does NOT check if documentation is complete
-- ❌ Does NOT check for security vulnerabilities
-- ❌ Does NOT require admin approval
-
-**Why This Validation Approach:**
-
-**1. Technical Compliance is Automated:**
-- AgentHub interface pattern can be validated programmatically (file structure, syntax, CLI pattern)
-- No human judgment needed for technical checks (deterministic, fast, scalable)
-- Prevents broken/malformed submissions from reaching marketplace
-
-**2. Quality and Usefulness Determined by Community:**
-- Usage signals reflect real-world value (agents that work well get used more)
-- Evaluations provide external validation (creator or community-generated)
-- Community flags catch problems post-publication (reactive, only when needed)
-
-**3. Low Friction, High Standards:**
-- Only blocks submissions that fail technical requirements (prevents broken agents)
-- Doesn't block based on subjective quality judgments (let community decide)
-- Encourages experimentation (creators can iterate quickly, publish frequently)
-
-**4. Aligns with GitHub Model:**
-- GitHub enforces technical standards (valid Git repo, valid syntax) but not quality
-- Quality emerges through community signals (stars, forks, issues, PRs)
-- Proven at scale (millions of repositories, quality naturally surfaces)
-
-**5. Validation Rule Justification:**
-
-**Critical Validations (Block Publication):**
-- Repository access/permission: Ensures users can only publish their own repos (prevents abuse)
-- File existence: Ensures AgentHub interface files exist (core requirement)
-- YAML/Python syntax: Ensures files can be parsed and executed (prevents runtime errors)
-- Required fields: Ensures minimum metadata for discovery (name, version, description)
-- Interface pattern: Ensures agents follow AgentHub CLI standard (ensures interoperability)
+**Critical Validations (Required - Blocks Publication):**
+- Repository exists and is accessible via GitHub API
+- Repository is public (or user has access)
+- User has permission to publish (owner/collaborator)
+- `agent.py` file exists in repository
+- `agent.yaml` file exists in repository
+- `agent.yaml` is valid YAML format
+- `agent.yaml` has required fields: `name`, `version`, `description` (all non-empty)
+- `agent.py` is valid Python syntax (AST parsing)
+- `agent.py` follows AgentHub CLI interface pattern (JSON I/O via command-line)
 
 **Optional Validations (Warnings Only):**
-- Method consistency: Useful but not critical (agents can work without perfect alignment)
-- Best practices: Helpful guidance but not blockers (encourages good practices without enforcing)
-- Semantic versioning: Nice-to-have but not required (version can be any string)
+- Semantic versioning format
+- Interface methods consistency between `agent.yaml` and `agent.py`
+- Best practices (shebang, README.md)
 
-**Quality-Based Ranking (No Admin Gate):**
-- High-quality agents (verified, evaluations, usage) → Top positions
-- New/unverified agents → Lower positions, still discoverable
-- Poor-quality agents → Bottom of results, less visible but not hidden
-- Algorithm naturally surfaces quality over time
+**What Validation Does:**
+- ✅ Ensures AgentHub interface standard compliance
+- ✅ Prevents broken/malformed submissions
+- ✅ Validates technical requirements only (not quality/usefulness)
 
-**Community Moderation (Post-Publication):**
-- Users can flag agents for: spam, malicious code, broken functionality, license violations
-- Flagged agents get reviewed (admin intervention only when needed)
-- Repeat offenders can be suspended (same as GitHub)
+**What Validation Does NOT Do:**
+- ❌ Does NOT check if agent actually works/runs
+- ❌ Does NOT check code quality or usefulness
+- ❌ Does NOT require admin approval
 
-**Agent Discovery Flow:**
-1. User visits `/marketplace`
-2. Frontend calls `/api/agents?filter=...&sort=...`
-3. Backend queries database with filters/sorting
-4. Calculates aggregate scores on-the-fly (or cached)
-5. Returns ranked list
-6. Frontend displays with trust badges
+*Note: Detailed validation rules and step-by-step process are documented in the PRD.*
 
-**Ranking Algorithm (Quality-Based, No Admin Gate):**
+### 5.3 Agent Discovery & Ranking
+
+**Discovery Flow:**
+1. User visits marketplace → Frontend requests agent list
+2. Backend queries database with filters/sorting
+3. Calculates aggregate scores for each agent
+4. Returns ranked list sorted by `aggregateScore` (descending)
+5. Frontend displays agents with trust badges
+
+**Quality-Based Ranking Algorithm:**
 ```
 baseScore = 
   // Trust signals (can be achieved by anyone, not admin-gated)
@@ -719,9 +572,20 @@ aggregateScore = baseScore - penalties
 - **Defensive**: Penalties prevent bad actors from gaming the system
 - **Balanced**: Multiple signal types prevent single-point-of-failure (can't game just one signal)
 
-## 5. API Design
+### 5.4 Community Moderation
 
-### 5.1 API Routes Structure
+**Flagging System:**
+- Users can flag agents for: spam, malicious code, broken functionality, license violations
+- Flagged agents receive ranking penalty (drops in search results)
+- Multiple flags increase penalty severity
+- Admin reviews flags post-publication (reactive moderation)
+- Repeat offenders can be suspended
+
+---
+
+## 6. API Design
+
+### 6.1 API Routes Structure
 
 ```
 /api
@@ -778,7 +642,7 @@ aggregateScore = baseScore - penalties
 - **Future-proofing**: Can add `/api/v2/...` later if breaking changes needed
 - **No breaking changes expected**: API designed to be extensible (optional fields, backward-compatible additions)
 
-### 5.2 API Specifications
+### 6.2 API Specifications
 
 #### GET /api/agents
 
@@ -992,7 +856,7 @@ aggregateScore = baseScore - penalties
 
 **Use Case:** Allow users to validate their repository before submitting the full publish form
 
-## 6. Implementation Phases
+## 7. Implementation Phases
 
 ### Phase 0: Foundation (Week 1-2)
 
@@ -1069,7 +933,7 @@ aggregateScore = baseScore - penalties
 - Community moderation system (flag review)
 - Production-ready MVP with open publishing
 
-## 7. File Structure
+## 8. File Structure
 
 ```
 src/
@@ -1128,65 +992,65 @@ src/
     └── agent.ts                       # TypeScript types
 ```
 
-## 8. Security Considerations
+## 9. Security Considerations
 
-### 8.1 Authentication & Authorization
+### 9.1 Authentication & Authorization
 - GitHub OAuth via NextAuth.js (secure token handling)
 - API routes protected with session checks
 - Only authenticated users can submit agents
 - Admin-only routes for review workflow
 
-### 8.2 Data Validation
+### 9.2 Data Validation
 - Zod schemas for all API inputs
 - Repository URL validation (must be GitHub, public repo)
 - Rate limiting on submission endpoints
 - Input sanitization for user-provided content
 
-### 8.3 Repository Security
+### 9.3 Repository Security
 - Validate repository exists and is accessible
 - Check for agent.py/agent.yaml in repository
 - Parse agent.yaml safely (prevent code injection)
 - Store only metadata, not agent code
 
-## 9. Scalability Considerations
+## 10. Scalability Considerations
 
-### 9.1 Database
+### 10.1 Database
 - Indexes on frequently queried fields (slug, status, category, tags)
 - Pagination for large result sets
 - Connection pooling (Prisma handles this)
 
-### 9.2 Caching
+### 10.2 Caching
 - Cache agent listings (Redis or Edge Config)
 - Cache repository validation results
 - Cache GitHub API responses
 - Invalidate cache on agent updates
 
-### 9.3 API Performance
+### 10.3 API Performance
 - Optimize database queries (avoid N+1)
 - Use database views for complex rankings (future)
 - Consider full-text search (PostgreSQL tsvector) for search
 
-### 9.4 Future Migration Path
+### 10.4 Future Migration Path
 - Can extract API routes to separate service (API Gateway pattern)
 - Can add message queue for async processing (agent validation)
 - Can add CDN for static assets
 - Can migrate to microservices if needed (keep simple for MVP)
 
-## 10. Success Metrics Tracking
+## 11. Success Metrics Tracking
 
-### 10.1 Implementation Metrics
+### 11.1 Implementation Metrics
 - API response times (< 200ms for listing, < 100ms for detail)
 - Database query performance
 - Error rates (< 1%)
 - Uptime (99%+)
 
-### 10.2 Business Metrics (to be tracked)
+### 11.2 Business Metrics (to be tracked)
 - Agent submissions per week
 - Approval rate
 - Agent discovery (searches, filters used)
 - Usage tracking (views, installs)
 
-## 11. Risks & Mitigations
+## 12. Risks & Mitigations
 
 | Risk | Impact | Mitigation |
 |------|--------|------------|
@@ -1196,24 +1060,32 @@ src/
 | OAuth complexity | Low | Use NextAuth.js (handles complexity) |
 | Scalability concerns | Low (MVP) | Architecture supports scaling, but optimize for MVP first |
 
-## 12. Key Design Decisions
+## 13. Key Design Decisions
 
-### 12.1 Open Publishing Model
+### 13.1 Open Publishing Model
 
 **Decision:** Agents publish immediately upon technical validation (no admin review gate).
 
-**Rationale:**
-- Aligns with GitHub model: anyone can publish, quality determines visibility
-- Removes friction and encourages contribution
-- Scales automatically (no human bottleneck)
-- Quality signals (usage, evaluations, trust badges) naturally surface good agents
+**Why We Chose This:**
+- **Proven Success**: GitHub demonstrates open publishing works at scale (millions of repos)
+- **Scalability**: Automated validation handles thousands of submissions; manual review becomes bottleneck
+- **Community-Driven Quality**: Usage signals and evaluations naturally surface good agents
+- **Low Friction**: Immediate publication encourages contributions and experimentation
+- **Technical Validation is Sufficient**: Automated checks ensure interface compliance; quality is subjective
+
+**How It Works:**
+- Immediate publication upon successful validation (no waiting period)
+- Automated technical validation (agent.py, agent.yaml compliance)
+- Quality-based ranking (trust signals, usage, evaluations determine visibility)
+- Community moderation (flag/report for abuse; post-publication review only if needed)
+- Low visibility for low-quality agents (still discoverable but not featured)
 
 **Trade-offs:**
 - Lower-quality agents may be published (mitigated by ranking algorithm)
 - Need robust automated validation and community moderation
 - Initial catalog may have more noise (but sorting/ranking handles this)
 
-### 12.2 Quality-Based Discovery
+### 13.2 Quality-Based Discovery
 
 **Decision:** Ranking algorithm determines visibility, not approval status.
 
@@ -1229,7 +1101,7 @@ src/
 - Inclusive: anyone can publish, not gatekept by reviewers
 - Transparent: ranking is formulaic, not subjective
 
-## 13. Next Steps
+## 14. Next Steps
 
 1. **Review & Approval:** Get stakeholder approval on this design (especially open publishing model)
 2. **Environment Setup:** Set up database, GitHub OAuth app, environment variables
