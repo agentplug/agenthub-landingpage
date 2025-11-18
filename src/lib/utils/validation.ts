@@ -13,6 +13,7 @@ const interfaceMethodSchema = z.object({
   description: z.string().min(1, 'Method description is required'),
   parameters: z
     .record(
+      z.string(),
       z.object({
         type: z.string().min(1, 'Parameter type is required'),
         description: z.string().optional(),
@@ -47,10 +48,10 @@ export const agentMetadataSchema = z.object({
     })
     .partial()
     .optional(),
-  disclosures: z.record(z.boolean()).optional(),
+  disclosures: z.record(z.string(), z.boolean()).optional(),
   interface: z.object({
     methods: z
-      .record(interfaceMethodSchema)
+      .record(z.string(), interfaceMethodSchema)
       .refine((value) => Object.keys(value).length > 0, 'At least one interface method is required'),
   }),
 })
@@ -89,17 +90,19 @@ export function parseAgentYaml(content: string): AgentYamlValidationResult {
   }
 }
 
-const GITHUB_REPO_REGEX = /github\.com\/(?<owner>[A-Za-z0-9_.-]+)\/(?<repo>[A-Za-z0-9_.-]+)(?:\/.+)?$/
+const GITHUB_REPO_REGEX = /github\.com\/([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)(?:\/.+)?$/
 
 export function parseGitHubRepoUrl(repoUrl: string, defaultBranch = 'main'): RepoCoordinates {
   const match = repoUrl.match(GITHUB_REPO_REGEX)
-  if (!match || !match.groups) {
+  if (!match) {
     throw new Error('Repository URL must follow the pattern https://github.com/<owner>/<repo>')
   }
 
+  const [, owner, repo] = match
+
   return {
-    owner: match.groups.owner,
-    repo: match.groups.repo.replace(/\.git$/, ''),
+    owner,
+    repo: repo.replace(/\.git$/, ''),
     branch: defaultBranch,
   }
 }

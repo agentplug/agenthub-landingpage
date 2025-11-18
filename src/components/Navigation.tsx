@@ -4,10 +4,16 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { Menu, X, ChevronDown } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useSession, signOut } from 'next-auth/react'
+import Image from 'next/image'
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isMoreOpen, setIsMoreOpen] = useState(false)
+  const { data: session, status } = useSession()
+
+  const user = session?.user
+  const isAuthenticated = status === 'authenticated' && Boolean(user)
 
   const mainNavItems = [
     { name: 'Marketplace', href: '/marketplace' },
@@ -83,12 +89,48 @@ const Navigation = () => {
 
           {/* Desktop CTA Buttons */}
           <div className="hidden md:flex items-center gap-3">
-            <Link href="/login" className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors duration-200 text-sm font-medium px-3 py-2">
-              Log in
-            </Link>
-            <Link href="/docs" className="btn-primary text-sm">
-              Get started
-            </Link>
+            {isAuthenticated ? (
+              <div className="flex items-center gap-3">
+                {user?.githubAvatar ? (
+                  <Image
+                    src={user.githubAvatar}
+                    alt={user.githubUsername ?? user.name ?? 'User avatar'}
+                    width={32}
+                    height={32}
+                    className="rounded-full border border-[var(--border)]"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-[var(--surface-hover)] border border-[var(--border)] flex items-center justify-center text-xs font-semibold text-[var(--text-secondary)]">
+                    {(user?.githubUsername ?? user?.name ?? 'User').charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <div className="flex flex-col leading-tight">
+                  <span className="text-xs text-[var(--text-tertiary)]">Welcome</span>
+                  <span className="text-sm text-[var(--text-primary)] font-semibold">
+                    {user?.githubUsername ?? user?.name ?? 'Agent'}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  className="btn-secondary text-sm px-3 py-2"
+                  onClick={() => signOut()}
+                >
+                  Sign out
+                </button>
+              </div>
+            ) : (
+              <>
+                <Link
+                  href="/auth/signin"
+                  className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors duration-200 text-sm font-medium px-3 py-2"
+                >
+                  Log in
+                </Link>
+                <Link href="/docs" className="btn-primary text-sm">
+                  Get started
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -133,21 +175,59 @@ const Navigation = () => {
                 </Link>
               ))}
               
-              <div className="pt-4 border-t border-[var(--border)] space-y-2 mt-2">
-                <Link
-                  href="/login"
-                  className="block px-3 py-2 text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)] rounded-lg transition-colors duration-200 text-sm font-medium"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Log in
-                </Link>
-                <Link
-                  href="/docs"
-                  className="btn-primary block text-center text-sm"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Get started
-                </Link>
+              <div className="pt-4 border-t border-[var(--border)] space-y-3 mt-2">
+                {isAuthenticated ? (
+                  <>
+                    <div className="flex items-center gap-3">
+                      {user?.githubAvatar ? (
+                        <Image
+                          src={user.githubAvatar}
+                          alt={user.githubUsername ?? user?.name ?? 'User avatar'}
+                          width={32}
+                          height={32}
+                          className="rounded-full border border-[var(--border)]"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-[var(--surface-hover)] border border-[var(--border)] flex items-center justify-center text-xs font-semibold text-[var(--text-secondary)]">
+                          {(user?.githubUsername ?? user?.name ?? 'User').charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-sm text-[var(--text-primary)] font-semibold">
+                          {user?.githubUsername ?? user?.name ?? 'Agent'}
+                        </p>
+                        <p className="text-xs text-[var(--text-tertiary)]">Signed in</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      className="btn-secondary w-full text-sm"
+                      onClick={() => {
+                        setIsMenuOpen(false)
+                        signOut()
+                      }}
+                    >
+                      Sign out
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href="/auth/signin"
+                      className="block px-3 py-2 text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)] rounded-lg transition-colors duration-200 text-sm font-medium"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Log in
+                    </Link>
+                    <Link
+                      href="/docs"
+                      className="btn-primary block text-center text-sm"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Get started
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </motion.div>

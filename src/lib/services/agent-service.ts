@@ -178,8 +178,8 @@ export function deriveTags(metadata: AgentMetadata) {
   return Array.from(tags)
 }
 
-export function computeDisclosureChecklist(metadata: AgentMetadata) {
-  return metadata.disclosures ?? undefined
+export function computeDisclosureChecklist(metadata: AgentMetadata): Record<string, boolean> | undefined {
+  return metadata.disclosures ? (metadata.disclosures as Record<string, boolean>) : undefined
 }
 
 export function computeEvaluationSummary(metadata: AgentMetadata) {
@@ -191,6 +191,7 @@ export function computeDocumentationUrl(metadata: AgentMetadata) {
 }
 
 export function calculateDisclosureScore(metadata: AgentMetadata) {
-  return calculateDisclosureCompleteness(metadata.disclosures ?? undefined)
+  const disclosures = metadata.disclosures ? (metadata.disclosures as Record<string, boolean>) : undefined
+  return calculateDisclosureCompleteness(disclosures ?? undefined)
 }
 
