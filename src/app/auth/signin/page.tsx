@@ -14,7 +14,7 @@ export default function SignInPage() {
         <button
           type="button"
           className="btn-primary w-full flex items-center justify-center gap-3"
-          onClick={() => signIn('github')}
+          onClick={() => signIn('github', { callbackUrl: '/' })}
         >
           <Github className="w-5 h-5" />
           Continue with GitHub

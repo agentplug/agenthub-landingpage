@@ -1,11 +1,22 @@
 'use client'
 
 import React from 'react'
+import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { ArrowRight, BookOpen } from 'lucide-react'
-import Link from 'next/link'
+import { useIsHydrated } from '@/hooks/useIsHydrated'
 
 const Hero = () => {
+  const isHydrated = useIsHydrated()
+
+  const heroFade = (delay = 0) => ({
+    initial: { opacity: isHydrated ? 0 : 1, y: isHydrated ? 20 : 0 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.5, delay },
+  })
+
+  const motionKey = (segment: string) => `${isHydrated ? 'hydrated' : 'ssr'}-${segment}`
+
   return (
     <section className="relative overflow-hidden min-h-screen flex items-center bg-[var(--background)]">
       {/* Subtle gradient overlay - OpenAI style */}
@@ -18,9 +29,8 @@ const Hero = () => {
         <div className="text-center space-y-8">
           {/* Badge */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
+            key={motionKey('badge')}
+            {...heroFade(0.1)}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--surface)] border border-[var(--border)] text-sm text-[var(--text-secondary)]"
           >
             <span className="relative flex h-2 w-2">
@@ -31,12 +41,7 @@ const Hero = () => {
           </motion.div>
 
           {/* Main heading */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="space-y-4"
-          >
+          <motion.div key={motionKey('heading')} {...heroFade(0.2)} className="space-y-4">
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-semibold text-[var(--text-primary)] tracking-tight">
               The App Store for{' '}
               <span className="gradient-text">AI Agents</span>
@@ -49,9 +54,8 @@ const Hero = () => {
 
           {/* CTA Buttons */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+            key={motionKey('cta')}
+            {...heroFade(0.3)}
             className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4"
           >
             <a
@@ -73,12 +77,7 @@ const Hero = () => {
           </motion.div>
 
           {/* Code example */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="pt-12 max-w-2xl mx-auto"
-          >
+          <motion.div key={motionKey('code')} {...heroFade(0.4)} className="pt-12 max-w-2xl mx-auto">
             <div className="code-block text-left">
               <div className="flex items-center gap-2 mb-3 pb-3 border-b border-[var(--border)]">
                 <div className="flex gap-1.5">

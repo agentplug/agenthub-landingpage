@@ -6,14 +6,21 @@ import { Menu, X, ChevronDown } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSession, signOut } from 'next-auth/react'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isMoreOpen, setIsMoreOpen] = useState(false)
   const { data: session, status } = useSession()
+  const router = useRouter()
 
   const user = session?.user
   const isAuthenticated = status === 'authenticated' && Boolean(user)
+
+  const handleSignOut = async () => {
+    await signOut({ redirect: false })
+    router.refresh()
+  }
 
   const mainNavItems = [
     { name: 'Marketplace', href: '/marketplace' },
@@ -113,7 +120,9 @@ const Navigation = () => {
                 <button
                   type="button"
                   className="btn-secondary text-sm px-3 py-2"
-                  onClick={() => signOut()}
+                  onClick={() => {
+                    void handleSignOut()
+                  }}
                 >
                   Sign out
                 </button>
@@ -204,7 +213,7 @@ const Navigation = () => {
                       className="btn-secondary w-full text-sm"
                       onClick={() => {
                         setIsMenuOpen(false)
-                        signOut()
+                        void handleSignOut()
                       }}
                     >
                       Sign out

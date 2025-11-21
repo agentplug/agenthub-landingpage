@@ -82,6 +82,10 @@ export async function validateGitHubRepository(input: PublishSubmissionInput) {
     throw error
   }
 
+  if (repoData.private) {
+    throw new Error('Repository must be public. Private repositories are not supported at this time.')
+  }
+
   const branch = payload.branch ?? repoData.default_branch ?? 'main'
   const [agentYaml, agentPy] = await Promise.all([
     resolveAgentFile(coordinates.owner, coordinates.repo, branch, 'agent.yaml'),
@@ -119,5 +123,10 @@ export async function validateGitHubRepository(input: PublishSubmissionInput) {
   }
 
   return { repository, files }
+}
+
+export async function fetchReadmeContent(owner: string, repo: string, ref: string) {
+  const result = await fetchFileContent(owner, repo, 'README.md', ref)
+  return result?.content ?? null
 }
 

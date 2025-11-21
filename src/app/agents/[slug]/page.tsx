@@ -1,132 +1,107 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Star, Users, Code, Play, ArrowLeft, Copy, Check } from 'lucide-react'
 import Link from 'next/link'
 
+interface AgentCreator {
+  id: string
+  githubUsername: string | null
+  githubAvatar: string | null
+}
+
+interface AgentDetail {
+  id: string
+  slug: string
+  name: string
+  description: string
+  category?: string | null
+  tags: string[]
+  repoUrl: string
+  repoOwner: string
+  repoName: string
+  repoBranch: string
+  usageCount: number
+  aggregateScore?: number | null
+  createdAt: string
+  publishedAt?: string | null
+  isVerified: boolean
+  evaluationSummaryUrl?: string | null
+  featured: boolean
+  creator: AgentCreator
+}
+
+interface AgentResponse {
+  agent: AgentDetail
+}
+
+const starRatingFromScore = (score: number | null | undefined) => {
+  if (score === null || score === undefined || Number.isNaN(score)) {
+    return 3
+  }
+  return Math.max(1, Math.min(5, Math.round(score / 20)))
+}
+
 const AgentPage = ({ params }: { params: { slug: string } }) => {
+  const [agent, setAgent] = useState<AgentDetail | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const [usageSnippet, setUsageSnippet] = useState<string | null>(null)
 
-  const agents = {
-    'research-agent': {
-      name: 'Research Agent',
-      description: 'Advanced research and analysis capabilities for comprehensive information gathering and synthesis.',
-      icon: '🔬',
-      rating: 5,
-      uses: '1.2k',
-      category: 'Research',
-      features: ['Web search', 'Data analysis', 'Report generation', 'Citation tracking'],
-      useCases: ['Academic research', 'Market analysis', 'Competitive intelligence', 'Content creation'],
-      codeExample: `import agenthub as ah
+  useEffect(() => {
+    const loadAgent = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        const response = await fetch(`/api/agents/${params.slug}`)
+        if (!response.ok) {
+          if (response.status === 404) {
+            setError('Agent not found')
+          } else {
+            setError('Failed to load agent details. Please try again.')
+          }
+          setLoading(false)
+          return
+        }
 
-# Load research agent
-research_agent = ah.load_agent("research-agent")
-
-# Research a topic
-results = research_agent.research(
-    topic="artificial intelligence trends 2024",
-    depth="comprehensive",
-    sources=["academic", "industry", "news"]
-)
-
-# Generate report
-report = research_agent.generate_report(results)
-print(report.summary)`
-    },
-    'coding-agent': {
-      name: 'Coding Agent',
-      description: 'Generate and review code across multiple programming languages with intelligent suggestions.',
-      icon: '💻',
-      rating: 5,
-      uses: '2.1k',
-      category: 'Development',
-      features: ['Code generation', 'Code review', 'Bug fixing', 'Documentation'],
-      useCases: ['Rapid prototyping', 'Code optimization', 'Bug resolution', 'Learning assistance'],
-      codeExample: `import agenthub as ah
-
-# Load coding agent
-coding_agent = ah.load_agent("coding-agent")
-
-# Generate code
-code = coding_agent.generate_code(
-    prompt="React component for data table with sorting",
-    language="javascript",
-    framework="react"
-)
-
-# Review code
-review = coding_agent.review_code(code)
-print(review.suggestions)`
-    },
-    'analysis-agent': {
-      name: 'Analysis Agent',
-      description: 'Data analysis and insights generation with advanced statistical and visualization capabilities.',
-      icon: '📊',
-      rating: 4,
-      uses: '856',
-      category: 'Data Science',
-      features: ['Data visualization', 'Statistical analysis', 'Insights', 'Predictive modeling'],
-      useCases: ['Business intelligence', 'Data exploration', 'Performance analysis', 'Trend identification'],
-      codeExample: `import agenthub as ah
-
-# Load analysis agent
-analysis_agent = ah.load_agent("analysis-agent")
-
-# Analyze data
-results = analysis_agent.analyze(
-    data="sales_data.csv",
-    analysis_type="comprehensive",
-    visualizations=True
-)
-
-# Get insights
-insights = analysis_agent.get_insights(results)
-print(insights.summary)`
-    },
-    'scientific-paper-analyzer': {
-      name: 'Scientific Paper Analyzer',
-      description: 'Analyze and summarize research papers with citation tracking and methodology extraction.',
-      icon: '📄',
-      rating: 5,
-      uses: '743',
-      category: 'Research',
-      features: ['Paper analysis', 'Summary generation', 'Citation tracking', 'Methodology extraction'],
-      useCases: ['Literature review', 'Research synthesis', 'Academic writing', 'Knowledge discovery'],
-      codeExample: `import agenthub as ah
-
-# Load paper analyzer
-paper_analyzer = ah.load_agent("scientific-paper-analyzer")
-
-# Analyze paper
-analysis = paper_analyzer.analyze_paper(
-    paper_path="research_paper.pdf",
-    analysis_depth="comprehensive"
-)
-
-# Get summary
-summary = paper_analyzer.get_summary(analysis)
-print(summary.key_findings)`
+        const data: AgentResponse = await response.json()
+        setAgent(data.agent)
+      } catch (err) {
+        console.error(err)
+        setError('Unexpected error while loading agent.')
+      } finally {
+        setLoading(false)
+      }
     }
-  }
 
-  const agent = agents[params.slug as keyof typeof agents]
+    void loadAgent()
+  }, [params.slug])
 
-  if (!agent) {
-    return (
-      <div className="min-h-screen py-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl font-bold text-white mb-4">Agent Not Found</h1>
-          <p className="text-white/70 mb-8">The requested agent could not be found.</p>
-          <Link href="/marketplace" className="btn-primary">
-            Browse All Agents
-          </Link>
-        </div>
-      </div>
-    )
-  }
+  useEffect(() => {
+    const fetchReadmeUsage = async () => {
+      if (!agent) return
 
-  const renderStars = (rating: number) => {
+      try {
+        const response = await fetch(`/api/agents/${agent.slug}/readme-example`)
+        if (!response.ok) {
+          return
+        }
+        const data: { code: string | null } = await response.json()
+        if (data.code && data.code.trim()) {
+          setUsageSnippet(data.code.trim())
+        }
+      } catch (err) {
+        console.error('Failed to load README usage snippet', err)
+      }
+    }
+
+    void fetchReadmeUsage()
+  }, [agent])
+
+  const renderStars = (score: number | null | undefined) => {
+    const rating = starRatingFromScore(score)
     return Array.from({ length: 5 }, (_, i) => (
       <Star
         key={i}
@@ -135,11 +110,56 @@ print(summary.key_findings)`
     ))
   }
 
+  const fallbackExample = agent
+    ? `import agenthub as ah
+
+# Load agent from AgentHub
+agent = ah.load_agent("${agent.slug}")
+
+# Replace this with the actual call for your use case
+result = agent.run({...})
+print(result)`
+    : ''
+
+  const codeExample = usageSnippet ?? fallbackExample
+
   const copyCode = () => {
-    navigator.clipboard.writeText(agent.codeExample)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    if (!codeExample) return
+    if (navigator?.clipboard?.writeText) {
+      void navigator.clipboard.writeText(codeExample)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
   }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen py-20">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <p className="text-white/70">Loading agent…</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !agent) {
+    return (
+      <div className="min-h-screen py-20">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1 className="text-4xl font-bold text-white mb-4">Agent Not Found</h1>
+          <p className="text-white/70 mb-8">
+            {error ?? 'The requested agent could not be found.'}
+          </p>
+          <Link href="/marketplace" className="btn-primary">
+            Browse All Agents
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  const initialBadge = agent.tags[0]?.charAt(0)?.toUpperCase() ?? agent.name.charAt(0)?.toUpperCase() ?? 'A'
+  const formattedUses = agent.usageCount.toLocaleString()
 
   return (
     <div className="min-h-screen py-20">
@@ -170,23 +190,23 @@ print(summary.key_findings)`
           <div className="glass-dark rounded-2xl p-8">
             <div className="flex items-start justify-between mb-6">
               <div className="flex items-center">
-                <div className="w-20 h-20 bg-gradient-to-br from-purple-600 via-blue-600 to-emerald-600 rounded-2xl flex items-center justify-center text-4xl mr-6">
-                  {agent.icon}
+                <div className="w-20 h-20 bg-gradient-to-br from-purple-600 via-blue-600 to-emerald-600 rounded-2xl flex items-center justify-center text-3xl mr-6">
+                  {initialBadge}
                 </div>
                 <div>
                   <h1 className="text-4xl font-bold text-white mb-2">{agent.name}</h1>
                   <span className="text-sm font-medium text-purple-400 bg-purple-400/20 px-3 py-1 rounded-full">
-                    {agent.category}
+                    {agent.category ?? 'General'}
                   </span>
                 </div>
               </div>
               <div className="text-right">
                 <div className="flex items-center space-x-1 mb-2">
-                  {renderStars(agent.rating)}
+                  {renderStars(agent.aggregateScore)}
                 </div>
                 <div className="flex items-center text-white/60 text-sm">
                   <Users className="w-4 h-4 mr-1" />
-                  {agent.uses} uses
+                  {formattedUses} uses
                 </div>
               </div>
             </div>
@@ -197,39 +217,63 @@ print(summary.key_findings)`
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Features */}
+            {/* Capabilities */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
               className="glass-dark rounded-2xl p-8"
             >
-              <h2 className="text-2xl font-bold text-white mb-6">Features</h2>
+              <h2 className="text-2xl font-bold text-white mb-6">Capabilities</h2>
               <div className="grid md:grid-cols-2 gap-4">
-                {agent.features.map((feature, index) => (
+                {agent.tags.map((tag, index) => (
                   <div key={index} className="flex items-center">
                     <div className="w-2 h-2 bg-emerald-400 rounded-full mr-3"></div>
-                    <span className="text-white/80">{feature}</span>
+                    <span className="text-white/80">
+                      {tag.charAt(0).toUpperCase() + tag.slice(1)}
+                    </span>
                   </div>
                 ))}
               </div>
             </motion.div>
 
-            {/* Use Cases */}
+            {/* Repository & creator */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.6 }}
               className="glass-dark rounded-2xl p-8"
             >
-              <h2 className="text-2xl font-bold text-white mb-6">Use Cases</h2>
-              <div className="grid md:grid-cols-2 gap-4">
-                {agent.useCases.map((useCase, index) => (
-                  <div key={index} className="flex items-center">
-                    <div className="w-2 h-2 bg-blue-400 rounded-full mr-3"></div>
-                    <span className="text-white/80">{useCase}</span>
+              <h2 className="text-2xl font-bold text-white mb-6">Repository & Creator</h2>
+              <div className="space-y-3 text-white/80">
+                <div>
+                  <span className="font-semibold">Repository: </span>
+                  <Link
+                    href={agent.repoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-emerald-400 hover:underline break-all"
+                  >
+                    {agent.repoUrl}
+                  </Link>
+                </div>
+                <div>
+                  <span className="font-semibold">Creator (GitHub): </span>
+                  <span>{agent.repoOwner}</span>
+                </div>
+                {agent.evaluationSummaryUrl && (
+                  <div>
+                    <span className="font-semibold">Evaluation: </span>
+                    <Link
+                      href={agent.evaluationSummaryUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-emerald-400 hover:underline break-all"
+                    >
+                      View external evaluation
+                    </Link>
                   </div>
-                ))}
+                )}
               </div>
             </motion.div>
 
@@ -251,27 +295,23 @@ print(summary.key_findings)`
                 </button>
               </div>
               <div className="bg-black/50 rounded-xl p-6 font-mono text-sm overflow-x-auto">
-                <pre className="text-white whitespace-pre-wrap">{agent.codeExample}</pre>
+                <pre className="text-white whitespace-pre-wrap">{codeExample}</pre>
               </div>
             </motion.div>
           </div>
 
           {/* Sidebar */}
           <div className="space-y-8">
-            {/* Try Agent */}
+            {/* Install Agent */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 1.0 }}
               className="glass-dark rounded-2xl p-8"
             >
-              <h3 className="text-xl font-bold text-white mb-6">Try This Agent</h3>
+              <h3 className="text-xl font-bold text-white mb-6">Install Agent</h3>
               <div className="space-y-4">
                 <button className="w-full btn-primary flex items-center justify-center">
-                  <Play className="w-5 h-5 mr-2" />
-                  Try in Playground
-                </button>
-                <button className="w-full btn-secondary">
                   Install Agent
                 </button>
               </div>
