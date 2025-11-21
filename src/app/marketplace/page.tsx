@@ -1,34 +1,12 @@
 
 'use client'
 
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Star, Users, Search, Filter, Loader2 } from 'lucide-react'
 import Link from 'next/link'
-
-interface AgentListItem {
-  id: string
-  slug: string
-  name: string
-  description: string
-  category?: string | null
-  tags: string[]
-  repoUrl: string
-  isVerified: boolean
-  evaluationSummaryUrl?: string | null
-  usageCount: number
-  aggregateScore: number | null
-  featured: boolean
-  createdAt: string
-  publishedAt?: string | null
-}
-
-interface AgentsResponse {
-  agents: AgentListItem[]
-  total: number
-  page: number
-  limit: number
-}
+import { useAgents } from '@/hooks/useAgents'
+import type { AgentListItem } from '@/lib/api/agents'
 
 const starRatingFromScore = (score: number | null) => {
   if (score === null || Number.isNaN(score)) {
@@ -38,34 +16,11 @@ const starRatingFromScore = (score: number | null) => {
 }
 
 const Marketplace = () => {
-  const [agents, setAgents] = useState<AgentListItem[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { data, loading, error } = useAgents({ limit: 50 })
   const [searchTerm, setSearchTerm] = useState('')
 
-  useEffect(() => {
-    const loadAgents = async () => {
-      setLoading(true)
-      setError(null)
-      try {
-        const response = await fetch('/api/agents?limit=50')
-        if (!response.ok) {
-          throw new Error('Failed to load agents')
-        }
-        const data: AgentsResponse = await response.json()
-        setAgents(data.agents)
-      } catch (err) {
-        console.error(err)
-        setError('Unable to load agents right now. Please try again later.')
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    void loadAgents()
-  }, [])
-
   const filteredAgents = useMemo(() => {
+    const agents = data?.agents ?? []
     if (!searchTerm) {
       return agents
     }
@@ -75,7 +30,7 @@ const Marketplace = () => {
       agent.description.toLowerCase().includes(term) ||
       agent.tags.some((tag) => tag.toLowerCase().includes(term))
     )
-  }, [agents, searchTerm])
+  }, [data, searchTerm])
 
   const renderStars = (score: number | null) => {
     const rating = starRatingFromScore(score)

@@ -7,6 +7,11 @@ export const publishSubmissionSchema = z.object({
     .url('Repository URL must be a valid URL')
     .refine((value) => value.includes('github.com'), 'Only GitHub repositories are supported for MVP'),
   branch: z.string().min(1).optional(),
+  // Optional overrides / additions to metadata discovered from agent.yaml
+  category: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+  disclosureChecklist: z.record(z.string(), z.boolean()).optional(),
+  evaluationSummaryUrl: z.string().url().optional(),
 })
 
 const interfaceMethodSchema = z.object({

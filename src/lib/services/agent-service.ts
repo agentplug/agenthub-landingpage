@@ -170,6 +170,102 @@ export async function createAgent(input: AgentCreationInput) {
   })
 }
 
+export async function recordAgentUsage(agentId: string, userId: string | null, action: 'view' | 'try' | 'install') {
+  await prisma.$transaction(async (tx) => {
+    const updatedAgent = await tx.agent.update({
+      where: { id: agentId },
+      data: {
+        usageCount: { increment: 1 },
+      },
+    })
+
+    const maxStats = await tx.agent.aggregate({
+      _max: {
+        usageCount: true,
+      },
+    })
+
+    const maxUsage = maxStats._max.usageCount ?? updatedAgent.usageCount
+
+    const aggregateScore = calculateAggregateScore({
+      usageCount: updatedAgent.usageCount,
+      maxUsage,
+      evaluationSummaryUrl: updatedAgent.evaluationSummaryUrl,
+      disclosureChecklist: updatedAgent.disclosureChecklist as Record<string, boolean> | null | undefined,
+      hasValidInterface: updatedAgent.hasValidInterface,
+      isVerified: updatedAgent.isVerified,
+      featured: updatedAgent.featured,
+      isFlagged: updatedAgent.isFlagged,
+      flagCount: updatedAgent.flagCount,
+      publishedAt: updatedAgent.publishedAt,
+    })
+
+    await tx.agent.update({
+      where: { id: agentId },
+      data: {
+        aggregateScore,
+      },
+    })
+
+    await tx.agentUsage.create({
+      data: {
+        agentId,
+        userId: userId ?? undefined,
+        context: { action },
+      },
+    })
+  })
+}
+
+export async function flagAgent(params: { agentId: string; userId: string; reason: string; notes?: string }) {
+  await prisma.$transaction(async (tx) => {
+    const agent = await tx.agent.update({
+      where: { id: params.agentId },
+      data: {
+        isFlagged: true,
+        flagCount: { increment: 1 },
+      },
+    })
+
+    const maxStats = await tx.agent.aggregate({
+      _max: {
+        usageCount: true,
+      },
+    })
+
+    const maxUsage = maxStats._max.usageCount ?? agent.usageCount
+
+    const aggregateScore = calculateAggregateScore({
+      usageCount: agent.usageCount,
+      maxUsage,
+      evaluationSummaryUrl: agent.evaluationSummaryUrl,
+      disclosureChecklist: agent.disclosureChecklist as Record<string, boolean> | null | undefined,
+      hasValidInterface: agent.hasValidInterface,
+      isVerified: agent.isVerified,
+      featured: agent.featured,
+      isFlagged: true,
+      flagCount: agent.flagCount + 1,
+      publishedAt: agent.publishedAt,
+    })
+
+    await tx.agent.update({
+      where: { id: params.agentId },
+      data: {
+        aggregateScore,
+      },
+    })
+
+    await tx.agentFlag.create({
+      data: {
+        agentId: params.agentId,
+        userId: params.userId,
+        reason: params.reason,
+        notes: params.notes,
+      },
+    })
+  })
+}
+
 export function deriveTags(metadata: AgentMetadata) {
   const tags = new Set(metadata.tags ?? [])
   if (metadata.category) {

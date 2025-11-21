@@ -58,14 +58,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const disclosureChecklist = computeDisclosureChecklist(metadata) ?? undefined
-    const evaluationSummaryUrl = computeEvaluationSummary(metadata) ?? undefined
+    const computedDisclosureChecklist = computeDisclosureChecklist(metadata) ?? undefined
+    const computedEvaluationSummaryUrl = computeEvaluationSummary(metadata) ?? undefined
     const readmeUrl = files.readmeUrl ?? computeDocumentationUrl(metadata)
 
     const agent = await createAgent({
       metadata: {
         ...metadata,
-        tags: deriveTags(metadata),
+        category: submission.category ?? metadata.category,
+        tags: submission.tags && submission.tags.length ? submission.tags : deriveTags(metadata),
       },
       repoUrl: submission.repoUrl,
       repoOwner: repository.owner,
@@ -73,8 +74,8 @@ export async function POST(request: NextRequest) {
       repoBranch: repository.branch,
       agentPyPath: files.agentPyPath,
       agentYamlPath: files.agentYamlPath,
-      disclosureChecklist: disclosureChecklist ?? undefined,
-      evaluationSummaryUrl,
+      disclosureChecklist: submission.disclosureChecklist ?? computedDisclosureChecklist ?? undefined,
+      evaluationSummaryUrl: submission.evaluationSummaryUrl ?? computedEvaluationSummaryUrl,
       readmeUrl,
       creatorId: session.user.id,
     })

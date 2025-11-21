@@ -2,39 +2,9 @@
 
 import React, { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Star, Users, Code, Play, ArrowLeft, Copy, Check } from 'lucide-react'
+import { Star, Users, Code, ArrowLeft, Copy, Check } from 'lucide-react'
 import Link from 'next/link'
-
-interface AgentCreator {
-  id: string
-  githubUsername: string | null
-  githubAvatar: string | null
-}
-
-interface AgentDetail {
-  id: string
-  slug: string
-  name: string
-  description: string
-  category?: string | null
-  tags: string[]
-  repoUrl: string
-  repoOwner: string
-  repoName: string
-  repoBranch: string
-  usageCount: number
-  aggregateScore?: number | null
-  createdAt: string
-  publishedAt?: string | null
-  isVerified: boolean
-  evaluationSummaryUrl?: string | null
-  featured: boolean
-  creator: AgentCreator
-}
-
-interface AgentResponse {
-  agent: AgentDetail
-}
+import { useAgent } from '@/hooks/useAgent'
 
 const starRatingFromScore = (score: number | null | undefined) => {
   if (score === null || score === undefined || Number.isNaN(score)) {
@@ -44,40 +14,9 @@ const starRatingFromScore = (score: number | null | undefined) => {
 }
 
 const AgentPage = ({ params }: { params: { slug: string } }) => {
-  const [agent, setAgent] = useState<AgentDetail | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { data: agent, loading, error } = useAgent(params.slug)
   const [copied, setCopied] = useState(false)
   const [usageSnippet, setUsageSnippet] = useState<string | null>(null)
-
-  useEffect(() => {
-    const loadAgent = async () => {
-      setLoading(true)
-      setError(null)
-      try {
-        const response = await fetch(`/api/agents/${params.slug}`)
-        if (!response.ok) {
-          if (response.status === 404) {
-            setError('Agent not found')
-          } else {
-            setError('Failed to load agent details. Please try again.')
-          }
-          setLoading(false)
-          return
-        }
-
-        const data: AgentResponse = await response.json()
-        setAgent(data.agent)
-      } catch (err) {
-        console.error(err)
-        setError('Unexpected error while loading agent.')
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    void loadAgent()
-  }, [params.slug])
 
   useEffect(() => {
     const fetchReadmeUsage = async () => {
@@ -123,6 +62,21 @@ print(result)`
 
   const codeExample = usageSnippet ?? fallbackExample
 
+  const trackUsage = async (action: 'view' | 'try' | 'install') => {
+    if (!agent) return
+    try {
+      await fetch(`/api/agents/${agent.slug}/usage`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action }),
+      })
+    } catch (err) {
+      console.error('Failed to record usage', err)
+    }
+  }
+
   const copyCode = () => {
     if (!codeExample) return
     if (navigator?.clipboard?.writeText) {
@@ -160,6 +114,12 @@ print(result)`
 
   const initialBadge = agent.tags[0]?.charAt(0)?.toUpperCase() ?? agent.name.charAt(0)?.toUpperCase() ?? 'A'
   const formattedUses = agent.usageCount.toLocaleString()
+
+  useEffect(() => {
+    if (!agent) return
+    void trackUsage('view')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [agent?.slug])
 
   return (
     <div className="min-h-screen py-20">
@@ -311,7 +271,12 @@ print(result)`
             >
               <h3 className="text-xl font-bold text-white mb-6">Install Agent</h3>
               <div className="space-y-4">
-                <button className="w-full btn-primary flex items-center justify-center">
+                <button
+                  className="w-full btn-primary flex items-center justify-center"
+                  onClick={() => {
+                    void trackUsage('install')
+                  }}
+                >
                   Install Agent
                 </button>
               </div>

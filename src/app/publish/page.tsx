@@ -16,31 +16,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { useSession, signIn } from 'next-auth/react'
-
-type PublishStatus = 'idle' | 'validating' | 'submitting' | 'success' | 'error'
-
-interface ValidationWarnings {
-  warnings: string[]
-}
-
-interface PublishedAgentResponse {
-  status: 'published'
-  agent: {
-    slug: string
-    name: string
-    repoUrl: string
-  }
-  warnings: string[]
-}
-
-interface ValidationResponse {
-  metadata: {
-    name: string
-    description: string
-    tags: string[]
-  }
-  warnings: string[]
-}
+import { usePublish } from '@/hooks/usePublish'
 
 const steps = [
   {
@@ -73,44 +49,24 @@ const Publish = () => {
   const { status: sessionStatus, data: session } = useSession()
   const [repoUrl, setRepoUrl] = useState('')
   const [branch, setBranch] = useState('')
-  const [status, setStatus] = useState<PublishStatus>('idle')
-  const [warnings, setWarnings] = useState<string[]>([])
-  const [error, setError] = useState<string | null>(null)
-  const [successResponse, setSuccessResponse] = useState<PublishedAgentResponse['agent'] | null>(null)
-  const [validationPreview, setValidationPreview] = useState<ValidationResponse['metadata'] | null>(null)
+  const {
+    status,
+    warnings,
+    error,
+    validationPreview,
+    successAgent,
+    validate,
+    submit,
+    reset,
+  } = usePublish()
 
   const isAuthenticated = sessionStatus === 'authenticated'
-
-  const resetFeedback = () => {
-    setWarnings([])
-    setError(null)
-    setSuccessResponse(null)
-    setValidationPreview(null)
-  }
 
   const handleValidate = async () => {
     if (!repoUrl) {
       return
     }
-    resetFeedback()
-    setStatus('validating')
-    try {
-      const params = new URLSearchParams({ repoUrl })
-      if (branch) {
-        params.append('branch', branch)
-      }
-      const response = await fetch(`/api/github/validate-repo?${params.toString()}`)
-      if (!response.ok) {
-        throw new Error((await response.json()).error ?? 'Validation failed')
-      }
-      const data: ValidationResponse = await response.json()
-      setValidationPreview(data.metadata)
-      setWarnings(data.warnings)
-      setStatus('idle')
-    } catch (err) {
-      setStatus('error')
-      setError(err instanceof Error ? err.message : 'Validation failed')
-    }
+    await validate(repoUrl, branch || undefined)
   }
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -121,46 +77,9 @@ const Publish = () => {
       return
     }
 
-    resetFeedback()
-    setStatus('submitting')
-
-    try {
-      const response = await fetch('/api/publish/submit', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          repoUrl,
-          branch: branch || undefined,
-        }),
-      })
-
-      if (!response.ok) {
-        const payload = await response.json()
-        if (response.status === 401) {
-          signIn('github')
-          return
-        }
-
-        if (payload.status === 'validation_failed' && payload.errors) {
-          setWarnings(payload.warnings ?? [])
-          setError(payload.errors.join('\n'))
-        } else {
-          setError(payload.error ?? 'Failed to publish agent')
-        }
-        setStatus('error')
-        return
-      }
-
-      const data: PublishedAgentResponse = await response.json()
-      setWarnings(data.warnings)
-      setSuccessResponse(data.agent)
-      setStatus('success')
-    } catch (err) {
-      console.error(err)
-      setError('Unexpected error while publishing. Please try again.')
-      setStatus('error')
+    const result = await submit({ repoUrl, branch: branch || undefined })
+    if (result.needsAuth) {
+      signIn('github')
     }
   }
 
@@ -299,22 +218,22 @@ const Publish = () => {
               </div>
             )}
 
-            {successResponse && (
+            {successAgent && (
               <div className="card p-6 border border-[var(--accent-teal-light)]">
                 <h3 className="text-lg font-semibold text-[var(--accent-teal)] mb-2">Agent Published!</h3>
                 <p className="text-sm text-[var(--text-secondary)] mb-4">
-                  {successResponse.name} is live in the marketplace. We assigned a ranking baseline and trust badges.
+                  {successAgent.name} is live in the marketplace. We assigned a ranking baseline and trust badges.
                 </p>
                 <div className="flex flex-wrap gap-3">
                   <Link
-                    href={`/agents/${successResponse.slug}`}
+                    href={`/agents/${successAgent.slug}`}
                     className="btn-primary flex items-center gap-2"
                   >
                     <ExternalLink className="w-4 h-4" />
                     View Listing
                   </Link>
                   <Link
-                    href={successResponse.repoUrl}
+                    href={successAgent.repoUrl}
                     className="btn-secondary flex items-center gap-2"
                   >
                     <Github className="w-4 h-4" />
